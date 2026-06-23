@@ -1,0 +1,6 @@
+@PumaJoel_ProyectoIntegrador_HostAddress = http://localhost:5222
+
+GET {{PumaJoel_ProyectoIntegrador_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
