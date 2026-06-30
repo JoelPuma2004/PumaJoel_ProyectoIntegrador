@@ -1,8 +1,161 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model FrontendAdministrativo.Models.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="dashboard-welcome">
+    <div>
+        <h2>Bienvenido al panel administrativo</h2>
+        <p>
+            Administra la información oficial de UTN GolMundial 2026
+            desde un solo lugar.
+        </p>
+    </div>
+
+    <span class="development-status">
+        Sistema en desarrollo
+    </span>
+</div>
+
+<div class="row g-4 mb-4">
+
+    <div class="col-xl-3 col-md-6">
+        <div class="dashboard-card">
+            <h3>Selecciones</h3>
+            <div class="number">@Model.TotalSelecciones</div>
+            <p>Equipos registrados</p>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="dashboard-card orange">
+            <h3>Partidos</h3>
+            <div class="number">@Model.TotalPartidos</div>
+            <p>Partidos cargados</p>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="dashboard-card green">
+            <h3>Finalizados</h3>
+            <div class="number">@Model.PartidosFinalizados</div>
+            <p>Resultados registrados</p>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="dashboard-card red">
+            <h3>Usuarios</h3>
+            <div class="number">@Model.TotalUsuarios</div>
+            <p>Cuentas registradas</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4">
+
+    <div class="col-lg-8">
+        <div class="panel-card">
+
+            <div class="panel-card-header">
+                <div>
+                    <h3>Actividad reciente</h3>
+                    <p>Últimas acciones realizadas en el sistema</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table admin-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var actividad in Model.ActividadesRecientes)
+                        {
+                            <tr>
+                                <td>@actividad.Descripcion</td>
+
+                                <td>
+                                    <span class="type-badge">
+                                        @actividad.Tipo
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @actividad.Fecha.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="panel-card">
+
+            <div class="panel-card-header">
+                <div>
+                    <h3>Estado de los servicios</h3>
+                    <p>Disponibilidad de las APIs REST</p>
+                </div>
+            </div>
+
+            <div class="service-status">
+                <div>
+                    <strong>API de Estadísticas</strong>
+                    <small>Jakarta EE y WildFly</small>
+                </div>
+
+                @if (Model.ApiEstadisticasDisponible)
+                {
+                    <span class="service-badge available">
+                        Disponible
+                    </span>
+                }
+                else
+                {
+                    <span class="service-badge pending">
+                        Pendiente
+                    </span>
+                }
+            </div>
+
+            <div class="service-status">
+                <div>
+                    <strong>API UTNGolCoin</strong>
+                    <small>ASP.NET Core Web API</small>
+                </div>
+
+                @if (Model.ApiUtnGolCoinDisponible)
+                {
+                    <span class="service-badge available">
+                        Disponible
+                    </span>
+                }
+                else
+                {
+                    <span class="service-badge pending">
+                        Pendiente
+                    </span>
+                }
+            </div>
+
+            <div class="service-information">
+                Los servicios aparecerán disponibles cuando se configuren
+                las direcciones de las APIs de los compañeros.
+            </div>
+
+        </div>
+    </div>
+
 </div>

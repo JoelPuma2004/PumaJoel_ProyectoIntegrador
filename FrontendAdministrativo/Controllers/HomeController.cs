@@ -1,6 +1,5 @@
-using FrontendAdministrativo.Models;
+using FrontendAdministrativo.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
 namespace FrontendAdministrativo.Controllers
 {
@@ -8,18 +7,42 @@ namespace FrontendAdministrativo.Controllers
     {
         public IActionResult Index()
         {
-            return View();
-        }
+            // Datos temporales para construir y probar el frontend.
+            // Posteriormente serán reemplazados por datos de las APIs REST.
+            var dashboard = new DashboardViewModel
+            {
+                TotalSelecciones = 48,
+                TotalPartidos = 72,
+                PartidosFinalizados = 0,
+                TotalUsuarios = 3,
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+                ApiEstadisticasDisponible = false,
+                ApiUtnGolCoinDisponible = false,
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                ActividadesRecientes = new List<ActividadRecienteViewModel>
+                {
+                    new ActividadRecienteViewModel
+                    {
+                        Descripcion = "Proyecto administrativo MVC creado",
+                        Tipo = "Sistema",
+                        Fecha = DateTime.Now
+                    },
+                    new ActividadRecienteViewModel
+                    {
+                        Descripcion = "Dashboard administrativo configurado",
+                        Tipo = "Interfaz",
+                        Fecha = DateTime.Now
+                    },
+                    new ActividadRecienteViewModel
+                    {
+                        Descripcion = "Datos iniciales preparados para pruebas",
+                        Tipo = "Información",
+                        Fecha = DateTime.Now
+                    }
+                }
+            };
+
+            return View(dashboard);
         }
     }
 }
