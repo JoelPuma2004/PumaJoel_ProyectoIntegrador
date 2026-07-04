@@ -1,0 +1,116 @@
+﻿@model FrontendAdministrativo.Models.ViewModels.RegistrarResultadoViewModel
+
+@{
+    ViewData["Title"] = "Registrar resultado";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Registrar resultado oficial</h2>
+        <p>
+            Partido #@Model.NumeroPartidoFifa. Al confirmar,
+            el encuentro cambiará al estado finalizado.
+        </p>
+    </div>
+
+    <a asp-controller="Partidos"
+       asp-action="Index"
+       class="btn btn-outline-secondary">
+        Volver
+    </a>
+</div>
+
+<div class="panel-card result-form-container">
+
+    <div class="result-match-header">
+        <span>Partido oficial</span>
+        <strong>#@Model.NumeroPartidoFifa</strong>
+    </div>
+
+    <form asp-controller="Partidos"
+          asp-action="RegistrarResultado"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <input asp-for="PartidoId" type="hidden" />
+        <input asp-for="NumeroPartidoFifa" type="hidden" />
+        <input asp-for="SeleccionLocal" type="hidden" />
+        <input asp-for="SeleccionVisitante" type="hidden" />
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger">
+        </div>
+
+        <div class="result-teams-grid">
+
+            <div class="result-team-card">
+                <span>Selección local</span>
+                <h3>@Model.SeleccionLocal</h3>
+
+                <label asp-for="GolesLocal"
+                       class="form-label">
+                </label>
+
+                <input asp-for="GolesLocal"
+                       class="form-control result-input"
+                       min="0"
+                       max="99" />
+
+                <span asp-validation-for="GolesLocal"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="result-versus">
+                <strong>VS</strong>
+                <span>Resultado final</span>
+            </div>
+
+            <div class="result-team-card">
+                <span>Selección visitante</span>
+                <h3>@Model.SeleccionVisitante</h3>
+
+                <label asp-for="GolesVisitante"
+                       class="form-label">
+                </label>
+
+                <input asp-for="GolesVisitante"
+                       class="form-control result-input"
+                       min="0"
+                       max="99" />
+
+                <span asp-validation-for="GolesVisitante"
+                      class="text-danger">
+                </span>
+            </div>
+
+        </div>
+
+        <div class="result-warning">
+            <strong>Importante:</strong>
+            al guardar el resultado, el partido se marcará como
+            finalizado. En la integración definitiva también se
+            solicitará la liquidación automática de las predicciones.
+        </div>
+
+        <div class="form-actions">
+            <a asp-controller="Partidos"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                Cancelar
+            </a>
+
+            <button type="submit"
+                    class="btn btn-success">
+                Guardar resultado oficial
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
