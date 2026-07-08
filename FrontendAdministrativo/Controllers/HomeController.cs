@@ -1,8 +1,11 @@
 using FrontendAdministrativo.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FrontendAdministrativo.Controllers
+
 {
+    [Authorize(Roles = "ADMINISTRADOR")]
     public class HomeController : Controller
     {
         public IActionResult Index()

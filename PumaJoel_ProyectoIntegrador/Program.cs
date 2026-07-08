@@ -1,5 +1,6 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 
-namespace PumaJoel_ProyectoIntegrador
+namespace FrontendAdministrativo
 {
     public class Program
     {
@@ -7,26 +8,50 @@ namespace PumaJoel_ProyectoIntegrador
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            builder.Services.AddControllersWithViews();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
+            builder.Services
+                .AddAuthentication(
+                    CookieAuthenticationDefaults.AuthenticationScheme
+                )
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/Auth/Login";
+                    options.AccessDeniedPath = "/Auth/AccesoDenegado";
+
+                    options.Cookie.Name = "UTNGolMundial.Admin";
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+
+                    options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+                    options.SlidingExpiration = true;
+                });
+
+            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
+            if (!app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
+                app.UseExceptionHandler("/Home/Error");
+                app.UseHsts();
             }
 
             app.UseHttpsRedirection();
 
+            // CSS, JavaScript e imágenes se sirven públicamente.
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
-
-            app.MapControllers();
+            app.MapControllerRoute(
+                name: "default",
+                pattern: "{controller=Home}/{action=Index}/{id?}"
+            );
 
             app.Run();
         }

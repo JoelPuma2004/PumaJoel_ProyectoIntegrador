@@ -1,0 +1,550 @@
+﻿@model FrontendAdministrativo.Models.ViewModels.LoginViewModel
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Acceso administrativo";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0" />
+
+    <title>Acceso administrativo - UTN GolMundial</title>
+
+    <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                margin: 0;
+                min-height: 100%;
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            body {
+                background: #eef2f6;
+                color: #1f2937;
+            }
+
+            .login-container {
+                min-height: 100vh;
+                display: grid;
+                grid-template-columns: 1.1fr 1fr;
+            }
+
+            .login-information {
+                background: linear-gradient(
+                    135deg,
+                    #081f33,
+                    #123f67,
+                    #1f5d8f
+                );
+
+                color: white;
+                padding: 70px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .login-information::before {
+                content: "";
+                position: absolute;
+                width: 330px;
+                height: 330px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.05);
+                top: -120px;
+                right: -100px;
+            }
+
+            .login-information::after {
+                content: "";
+                position: absolute;
+                width: 250px;
+                height: 250px;
+                border-radius: 50%;
+                background: rgba(242, 140, 40, 0.09);
+                bottom: -100px;
+                left: -70px;
+            }
+
+            .login-brand {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                margin-bottom: 50px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .login-logo {
+                width: 62px;
+                height: 62px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 16px;
+                background: #f28c28;
+                color: white;
+                font-size: 20px;
+                font-weight: 800;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.20);
+            }
+
+            .login-brand-text h1 {
+                margin: 0;
+                font-size: 29px;
+            }
+
+            .login-brand-text span {
+                display: block;
+                margin-top: 5px;
+                color: #cbd5e1;
+                font-size: 13px;
+            }
+
+            .login-information h2 {
+                margin: 0 0 16px;
+                font-size: 42px;
+                line-height: 1.15;
+                position: relative;
+                z-index: 1;
+            }
+
+            .login-description {
+                max-width: 550px;
+                margin: 0;
+                color: #dbeafe;
+                font-size: 17px;
+                line-height: 1.7;
+                position: relative;
+                z-index: 1;
+            }
+
+            .login-security {
+                max-width: 520px;
+                margin-top: 32px;
+                padding: 17px 19px;
+                border-left: 5px solid #f28c28;
+                border-radius: 7px;
+                background: rgba(255, 255, 255, 0.10);
+                color: #f8fafc;
+                font-size: 14px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .login-features {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                max-width: 520px;
+                margin-top: 28px;
+                position: relative;
+                z-index: 1;
+            }
+
+            .login-feature {
+                padding: 12px 14px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 8px;
+                background: rgba(255, 255, 255, 0.06);
+                color: #dbeafe;
+                font-size: 13px;
+            }
+
+            .login-form-section {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 45px;
+            }
+
+            .login-card {
+                width: 100%;
+                max-width: 460px;
+                padding: 42px;
+                background: white;
+                border: 1px solid #dfe5ec;
+                border-radius: 18px;
+                box-shadow: 0 22px 55px rgba(15, 23, 42, 0.13);
+            }
+
+            .login-card-header {
+                margin-bottom: 30px;
+            }
+
+            .login-card-header h2 {
+                margin: 0 0 9px;
+                color: #102a43;
+                font-size: 29px;
+            }
+
+            .login-card-header p {
+                margin: 0;
+                color: #64748b;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-label {
+                display: block;
+                margin-bottom: 8px;
+                color: #334155;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            .form-control {
+                width: 100%;
+                height: 50px;
+                padding: 0 14px;
+                border: 1px solid #cbd5e1;
+                border-radius: 9px;
+                background: white;
+                color: #1f2937;
+                font-size: 15px;
+                outline: none;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            }
+
+            .form-control:focus {
+                border-color: #1f5d8f;
+                box-shadow: 0 0 0 4px rgba(31, 93, 143, 0.12);
+            }
+
+            .password-container {
+                position: relative;
+            }
+
+            .password-container .form-control {
+                padding-right: 95px;
+            }
+
+            .show-password-button {
+                position: absolute;
+                right: 7px;
+                top: 7px;
+                height: 36px;
+                padding: 0 12px;
+                border: none;
+                border-radius: 7px;
+                background: #eef2f6;
+                color: #334155;
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+            }
+
+            .show-password-button:hover {
+                background: #dfe7ef;
+            }
+
+            .remember-section {
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                margin: 4px 0 24px;
+                color: #475569;
+                font-size: 14px;
+            }
+
+            .remember-section input {
+                width: 17px;
+                height: 17px;
+                accent-color: #1f5d8f;
+            }
+
+            .login-button {
+                width: 100%;
+                min-height: 50px;
+                border: none;
+                border-radius: 9px;
+                background: linear-gradient(135deg, #102a43, #1f5d8f);
+                color: white;
+                font-size: 15px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: transform 0.15s, box-shadow 0.15s;
+            }
+
+            .login-button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 8px 18px rgba(16, 42, 67, 0.22);
+            }
+
+            .validation-summary-valid,
+            .field-validation-valid {
+                display: none;
+            }
+
+            .validation-summary-errors {
+                margin-bottom: 20px;
+                padding: 13px 15px;
+                border: 1px solid #fecaca;
+                border-radius: 8px;
+                background: #fef2f2;
+                color: #991b1b;
+                font-size: 13px;
+            }
+
+            .validation-summary-errors ul {
+                margin: 0;
+                padding-left: 18px;
+            }
+
+            .field-validation-error {
+                display: block;
+                margin-top: 6px;
+                color: #dc2626;
+                font-size: 12px;
+            }
+
+            .login-footer {
+                margin-top: 27px;
+                padding-top: 21px;
+                border-top: 1px solid #e5e7eb;
+                text-align: center;
+                color: #64748b;
+                font-size: 12px;
+            }
+
+            .restricted-badge {
+                display: inline-block;
+                margin-bottom: 15px;
+                padding: 6px 11px;
+                border-radius: 20px;
+                background: #fff7ed;
+                color: #9a3412;
+                font-size: 11px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            @@media (max-width: 900px) {
+                .login-container {
+                    grid-template-columns: 1fr;
+                }
+
+                .login-information {
+                    min-height: 390px;
+                    padding: 45px 30px;
+                }
+
+                .login-information h2 {
+                    font-size: 32px;
+                }
+
+                .login-form-section {
+                    padding: 35px 20px;
+                }
+            }
+
+            @@media (max-width: 550px) {
+                .login-information {
+                    padding: 35px 22px;
+                }
+
+                .login-brand {
+                    margin-bottom: 30px;
+                }
+
+                .login-information h2 {
+                    font-size: 28px;
+                }
+
+                .login-features {
+                    grid-template-columns: 1fr;
+                }
+
+                .login-card {
+                    padding: 30px 22px;
+                }
+            }
+    </style>
+</head>
+
+<body>
+
+    <main class="login-container">
+
+        <section class="login-information">
+
+            <div class="login-brand">
+
+                <div class="login-logo">
+                    UTN
+                </div>
+
+                <div class="login-brand-text">
+                    <h1>GolMundial 2026</h1>
+                    <span>Universidad Técnica del Norte</span>
+                </div>
+
+            </div>
+
+            <h2>Panel administrativo</h2>
+
+            <p class="login-description">
+                Gestión oficial del torneo, resultados, usuarios,
+                auditoría y configuración del sistema UTNGolCoin.
+            </p>
+
+            <div class="login-security">
+                Acceso restringido exclusivamente para administradores
+                autorizados.
+            </div>
+
+            <div class="login-features">
+
+                <div class="login-feature">
+                    Gestión de partidos y resultados
+                </div>
+
+                <div class="login-feature">
+                    Administración de usuarios y roles
+                </div>
+
+                <div class="login-feature">
+                    Reportes y auditoría
+                </div>
+
+                <div class="login-feature">
+                    Configuración UTNGolCoin
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="login-form-section">
+
+            <div class="login-card">
+
+                <div class="restricted-badge">
+                    Acceso restringido
+                </div>
+
+                <div class="login-card-header">
+                    <h2>Iniciar sesión</h2>
+
+                    <p>
+                        Ingrese sus credenciales para acceder al panel
+                        administrativo.
+                    </p>
+                </div>
+
+                <form asp-controller="Auth"
+                      asp-action="Login"
+                      method="post">
+
+                    @Html.AntiForgeryToken()
+
+                    <input asp-for="ReturnUrl"
+                           type="hidden" />
+
+                    <div asp-validation-summary="ModelOnly"></div>
+
+                    <div class="form-group">
+
+                        <label asp-for="Usuario"
+                               class="form-label">
+                        </label>
+
+                        <input asp-for="Usuario"
+                               class="form-control"
+                               placeholder="admin@utn.edu.ec"
+                               autocomplete="username" />
+
+                        <span asp-validation-for="Usuario"></span>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label asp-for="Contrasena"
+                               class="form-label">
+                        </label>
+
+                        <div class="password-container">
+
+                            <input asp-for="Contrasena"
+                                   id="passwordInput"
+                                   class="form-control"
+                                   placeholder="Ingrese su contraseña"
+                                   autocomplete="current-password" />
+
+                            <button type="button"
+                                    id="showPasswordButton"
+                                    class="show-password-button">
+                                Mostrar
+                            </button>
+
+                        </div>
+
+                        <span asp-validation-for="Contrasena"></span>
+
+                    </div>
+
+                    <label class="remember-section">
+
+                        <input asp-for="Recordarme" />
+
+                        <span>
+                            Mantener la sesión iniciada
+                        </span>
+
+                    </label>
+
+                    <button type="submit"
+                            class="login-button">
+                        Ingresar al panel
+                    </button>
+
+                </form>
+
+                <div class="login-footer">
+                    UTN GolMundial 2026 · Panel administrativo seguro
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+            const passwordInput =
+                document.getElementById("passwordInput");
+
+            const showPasswordButton =
+                document.getElementById("showPasswordButton");
+
+            showPasswordButton.addEventListener("click", function () {
+                const isPassword =
+                    passwordInput.type === "password";
+
+                passwordInput.type =
+                    isPassword ? "text" : "password";
+
+                showPasswordButton.textContent =
+                    isPassword ? "Ocultar" : "Mostrar";
+            });
+    </script>
+
+</body>
+</html>
