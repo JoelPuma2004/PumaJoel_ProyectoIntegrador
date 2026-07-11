@@ -1,0 +1,226 @@
+﻿@model FrontendAdministrativo.Models.ViewModels.PartidoFormViewModel
+
+@{
+    ViewData["Title"] = "Editar partido";
+}
+
+<div class="page-header">
+    <div>
+        <h2>Editar partido</h2>
+        <p>Modifique la información oficial del partido seleccionado.</p>
+    </div>
+
+    <a asp-controller="Partidos"
+       asp-action="Index"
+       class="btn btn-outline-secondary">
+        Volver
+    </a>
+</div>
+
+<div class="panel-card">
+
+    <form asp-controller="Partidos"
+          asp-action="Editar"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <input asp-for="Id"
+               type="hidden" />
+
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger">
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <label asp-for="NumeroPartidoFifa"
+                       class="form-label">
+                </label>
+
+                <input asp-for="NumeroPartidoFifa"
+                       class="form-control" />
+
+                <span asp-validation-for="NumeroPartidoFifa"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Fase"
+                       class="form-label">
+                </label>
+
+                <select asp-for="Fase"
+                        class="form-select">
+
+                    <option value="Fase de grupos">
+                        Fase de grupos
+                    </option>
+
+                    <option value="Dieciseisavos de final">
+                        Dieciseisavos de final
+                    </option>
+
+                    <option value="Octavos de final">
+                        Octavos de final
+                    </option>
+
+                    <option value="Cuartos de final">
+                        Cuartos de final
+                    </option>
+
+                    <option value="Semifinal">
+                        Semifinal
+                    </option>
+
+                    <option value="Tercer puesto">
+                        Tercer puesto
+                    </option>
+
+                    <option value="Final">
+                        Final
+                    </option>
+
+                </select>
+
+                <span asp-validation-for="Fase"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Grupo"
+                       class="form-label">
+                </label>
+
+                <select asp-for="Grupo"
+                        class="form-select">
+
+                    <option value="">No aplica</option>
+                    <option value="A">Grupo A</option>
+                    <option value="B">Grupo B</option>
+                    <option value="C">Grupo C</option>
+                    <option value="D">Grupo D</option>
+                    <option value="E">Grupo E</option>
+                    <option value="F">Grupo F</option>
+                    <option value="G">Grupo G</option>
+                    <option value="H">Grupo H</option>
+                    <option value="I">Grupo I</option>
+                    <option value="J">Grupo J</option>
+                    <option value="K">Grupo K</option>
+                    <option value="L">Grupo L</option>
+
+                </select>
+
+                <span asp-validation-for="Grupo"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="SeleccionLocal"
+                       class="form-label">
+                </label>
+
+                <input asp-for="SeleccionLocal"
+                       class="form-control" />
+
+                <span asp-validation-for="SeleccionLocal"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="SeleccionVisitante"
+                       class="form-label">
+                </label>
+
+                <input asp-for="SeleccionVisitante"
+                       class="form-control" />
+
+                <span asp-validation-for="SeleccionVisitante"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="FechaHora"
+                       class="form-label">
+                </label>
+
+                <input asp-for="FechaHora"
+                       type="datetime-local"
+                       asp-format="{0:yyyy-MM-ddTHH:mm}"
+                       class="form-control" />
+
+                <span asp-validation-for="FechaHora"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-5">
+                <label asp-for="Sede"
+                       class="form-label">
+                </label>
+
+                <input asp-for="Sede"
+                       class="form-control" />
+
+                <span asp-validation-for="Sede"
+                      class="text-danger">
+                </span>
+            </div>
+
+            <div class="col-md-3">
+                <label asp-for="Estado"
+                       class="form-label">
+                </label>
+
+                <select asp-for="Estado"
+                        class="form-select">
+
+                    <option value="PROGRAMADO">
+                        Programado
+                    </option>
+
+                    <option value="EN JUEGO">
+                        En juego
+                    </option>
+
+                    <option value="FINALIZADO">
+                        Finalizado
+                    </option>
+
+                </select>
+
+                <span asp-validation-for="Estado"
+                      class="text-danger">
+                </span>
+            </div>
+
+        </div>
+
+        <div class="form-actions mt-4">
+
+            <a asp-controller="Partidos"
+               asp-action="Index"
+               class="btn btn-outline-secondary">
+                Cancelar
+            </a>
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Guardar cambios
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

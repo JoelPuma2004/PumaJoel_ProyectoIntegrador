@@ -3,11 +3,24 @@
 @{
     ViewData["Title"] = "Gestión de partidos";
 }
+@if (ViewBag.UsandoDatosTemporales == true)
+{
+    <div class="alert alert-warning">
+        No fue posible conectarse con el Servicio de Estadísticas.
+        Se muestran datos temporales de respaldo.
+    </div>
+}
+else
+{
+    <div class="alert alert-success">
+        Calendario cargado desde el Servicio de Estadísticas.
+    </div>
+}
 @if (TempData["MensajeExito"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show"
          role="alert">
-
+         
         @TempData["MensajeExito"]
 
         <button type="button"

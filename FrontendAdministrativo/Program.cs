@@ -1,3 +1,4 @@
+using FrontendAdministrativo.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 
@@ -10,8 +11,29 @@ namespace FrontendAdministrativo
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllersWithViews();
+            builder.Services.AddHttpClient<EstadisticasApiService>(
+    client =>
+    {
+        string? baseUrl =
+            builder.Configuration["ApiEstadisticas:BaseUrl"];
 
-            // Autenticación mediante cookies.
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            throw new InvalidOperationException(
+                "No se configuró la URL de la API de Estadísticas.");
+        }
+
+        client.BaseAddress =
+            new Uri(baseUrl.TrimEnd('/') + "/");
+
+        client.Timeout = TimeSpan.FromSeconds(15);
+
+        client.DefaultRequestHeaders.TryAddWithoutValidation(
+            "ngrok-skip-browser-warning",
+            "true");
+    });
+
+
             builder.Services
                 .AddAuthentication(
                     CookieAuthenticationDefaults.AuthenticationScheme
