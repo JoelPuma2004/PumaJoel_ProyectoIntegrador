@@ -4,6 +4,9 @@ using FrontendAdministrativo.Models.ViewModels;
 using FrontendAdministrativo.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
+
+
 
 namespace FrontendAdministrativo.Controllers
 {
@@ -199,9 +202,21 @@ namespace FrontendAdministrativo.Controllers
         [HttpGet]
         public async Task<IActionResult> Detalles(int id)
         {
+           
             PartidoApiDto? partidoApi =
                 await _estadisticasApiService
                     .ObtenerPartidoPorIdAsync(id);
+
+            if (partidoApi is null)
+            {
+                List<PartidoApiDto>? todosLosPartidos =
+                    await _estadisticasApiService
+                        .ObtenerPartidosAsync();
+
+                partidoApi = todosLosPartidos?
+                    .FirstOrDefault(partido =>
+                        partido.Id == id);
+            }
 
             if (partidoApi is not null)
             {
@@ -211,6 +226,7 @@ namespace FrontendAdministrativo.Controllers
                 return View(partido);
             }
 
+            // Respaldo temporal cuando la API está apagada.
             PartidoDto? partidoTemporal =
                 PartidosTemporales.FirstOrDefault(
                     partido => partido.Id == id);
@@ -575,7 +591,7 @@ namespace FrontendAdministrativo.Controllers
         // =========================================================
 
         private static PartidoDto ConvertirPartidoApi(
-            PartidoApiDto partidoApi)
+     PartidoApiDto partidoApi)
         {
             return new PartidoDto
             {
@@ -586,9 +602,17 @@ namespace FrontendAdministrativo.Controllers
                     partidoApi.SeleccionLocal?.Nombre
                     ?? "Por definir",
 
+                CodigoBanderaLocal =
+                    ConvertirCodigoBandera(
+                        partidoApi.SeleccionLocal?.CodigoPais),
+
                 SeleccionVisitante =
                     partidoApi.SeleccionVisitante?.Nombre
                     ?? "Por definir",
+
+                CodigoBanderaVisitante =
+                    ConvertirCodigoBandera(
+                        partidoApi.SeleccionVisitante?.CodigoPais),
 
                 FechaHora = partidoApi.FechaHora,
                 Sede = partidoApi.Sede,
@@ -602,11 +626,8 @@ namespace FrontendAdministrativo.Controllers
                 Estado = ConvertirEstadoParaVista(
                     partidoApi.Estado),
 
-                GolesLocal =
-                    partidoApi.GolesLocal,
-
-                GolesVisitante =
-                    partidoApi.GolesVisitante
+                GolesLocal = partidoApi.GolesLocal,
+                GolesVisitante = partidoApi.GolesVisitante
             };
         }
 
@@ -717,6 +738,94 @@ namespace FrontendAdministrativo.Controllers
                 _ => char.ToUpper(faseLimpia[0])
                      + faseLimpia[1..]
             };
+        }
+        private static string ConvertirCodigoBandera(
+    string? codigoPais)
+        {
+            if (string.IsNullOrWhiteSpace(codigoPais))
+            {
+                return string.Empty;
+            }
+
+            string codigo = codigoPais
+                .Trim()
+                .ToUpperInvariant();
+
+            // Códigos FIFA que son diferentes de los códigos ISO.
+            var codigosEspeciales =
+                new Dictionary<string, string>(
+                    StringComparer.OrdinalIgnoreCase)
+                {
+                    ["ENG"] = "gb-eng",
+                    ["SCO"] = "gb-sct",
+                    ["WAL"] = "gb-wls",
+                    ["NIR"] = "gb-nir",
+
+                    ["RSA"] = "za",
+                    ["SUI"] = "ch",
+                    ["GER"] = "de",
+                    ["NED"] = "nl",
+                    ["CRO"] = "hr",
+                    ["GRE"] = "gr",
+                    ["POR"] = "pt",
+                    ["DEN"] = "dk",
+
+                    ["PAR"] = "py",
+                    ["URU"] = "uy",
+                    ["CHI"] = "cl",
+                    ["CRC"] = "cr",
+                    ["HAI"] = "ht",
+                    ["HON"] = "hn",
+                    ["TRI"] = "tt",
+
+                    ["KSA"] = "sa",
+                    ["UAE"] = "ae",
+                    ["CZE"] = "cz",
+                    ["SVN"] = "si",
+                    ["BIH"] = "ba",
+
+                    ["MAR"] = "ma",
+                    ["ALG"] = "dz",
+                    ["NGA"] = "ng",
+                    ["CMR"] = "cm",
+                    ["CGO"] = "cg",
+                    ["COD"] = "cd",
+                    ["KOS"] = "xk"
+                };
+
+            if (codigosEspeciales.TryGetValue(
+                codigo,
+                out string? codigoEspecial))
+            {
+                return codigoEspecial;
+            }
+
+            foreach (CultureInfo cultura in
+                CultureInfo.GetCultures(
+                    CultureTypes.SpecificCultures))
+            {
+                try
+                {
+                    var region = new RegionInfo(
+                        cultura.Name);
+
+                    if (string.Equals(
+                        region.ThreeLetterISORegionName,
+                        codigo,
+                        StringComparison.OrdinalIgnoreCase))
+                    {
+                        return region
+                            .TwoLetterISORegionName
+                            .ToLowerInvariant();
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // Continúa buscando.
+                }
+            }
+
+            return string.Empty;
         }
     }
 }

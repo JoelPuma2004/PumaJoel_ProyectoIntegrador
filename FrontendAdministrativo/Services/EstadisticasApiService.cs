@@ -166,5 +166,71 @@ namespace FrontendAdministrativo.Services
                 return false;
             }
         }
+        public async Task<List<SeleccionApiDto>?> ObtenerSeleccionesAsync()
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.GetAsync("selecciones");
+
+                respuesta.EnsureSuccessStatusCode();
+
+                return await respuesta.Content
+                    .ReadFromJsonAsync<List<SeleccionApiDto>>();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible obtener las selecciones desde la API.");
+
+                return null;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La API tardó demasiado al consultar las selecciones.");
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La respuesta de selecciones no tiene el formato esperado.");
+
+                return null;
+            }
+        }
+        public async Task<bool> EstaDisponibleAsync()
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.GetAsync(
+                        "selecciones",
+                        HttpCompletionOption.ResponseHeadersRead);
+
+                return respuesta.IsSuccessStatusCode;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "El Servicio de Estadísticas no está disponible.");
+
+                return false;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "El Servicio de Estadísticas tardó demasiado en responder.");
+
+                return false;
+            }
+        }
     }
+
 }

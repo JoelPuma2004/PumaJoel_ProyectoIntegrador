@@ -9,5 +9,7 @@
         public string CodigoPais { get; set; } = string.Empty;
 
         public string Grupo { get; set; } = string.Empty;
+
+        public string CodigoBandera { get; set; } = string.Empty;
     }
 }
