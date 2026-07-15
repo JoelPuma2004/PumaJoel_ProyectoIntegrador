@@ -19,8 +19,8 @@ namespace FrontendAdministrativo
 
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            throw new InvalidOperationException(
-                "No se configuró la URL de la API de Estadísticas.");
+            // Fallback local del equipo (Persona 2 / integración)
+            baseUrl = "http://localhost:8080/demo/api/v1/";
         }
 
         client.BaseAddress =
