@@ -66,13 +66,25 @@
                 </div>
 
                 <div class="admin-info">
-                    <span>Administrador</span>
 
-                    <a asp-controller="Home"
-                       asp-action="Index"
-                       class="btn btn-outline-danger btn-sm">
-                        Cerrar sesión
-                    </a>
+                    <span>
+                        @(User.Identity?.Name ?? "Administrador")
+                    </span>
+
+                    <form asp-controller="Auth"
+                          asp-action="Logout"
+                          method="post"
+                          class="m-0">
+
+                        @Html.AntiForgeryToken()
+
+                        <button type="submit"
+                                class="btn btn-outline-danger btn-sm">
+                            Cerrar sesión
+                        </button>
+
+                    </form>
+
                 </div>
             </header>
 

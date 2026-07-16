@@ -1,9 +1,11 @@
 ﻿using FrontendAdministrativo.Models;
 using FrontendAdministrativo.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FrontendAdministrativo.Controllers
 {
+    [Authorize(Roles = "ADMINISTRADOR")]
     public class PartidosController : Controller
     {
         // Datos temporales mientras la API de Estadísticas está en desarrollo.
