@@ -16,8 +16,12 @@ namespace FrontendAdministrativo.Models
         [Display(Name = "Selección local")]
         public string SeleccionLocal { get; set; } = string.Empty;
 
+        public string CodigoBanderaLocal { get; set; } = string.Empty;
+
         [Display(Name = "Selección visitante")]
         public string SeleccionVisitante { get; set; } = string.Empty;
+
+        public string CodigoBanderaVisitante { get; set; } = string.Empty;
 
         [Display(Name = "Fecha y hora")]
         public DateTime FechaHora { get; set; }
@@ -29,5 +33,6 @@ namespace FrontendAdministrativo.Models
         public int? GolesLocal { get; set; }
 
         public int? GolesVisitante { get; set; }
+
     }
 }

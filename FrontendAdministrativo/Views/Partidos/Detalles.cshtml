@@ -148,6 +148,22 @@
         justify-content: flex-end;
         gap: 10px;
     }
+
+    .equipo-identidad {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .bandera-detalle {
+        width: 80px;
+        height: 56px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #d7dee7;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+    }
 </style>
 
 <div class="detalle-contenedor">
@@ -172,15 +188,29 @@
         <div class="equipos">
 
             <div class="equipo">
-                <div class="equipo-nombre">
-                    @Model.SeleccionLocal
+
+                <div class="equipo-identidad">
+
+                    @if (!string.IsNullOrWhiteSpace(
+                        Model.CodigoBanderaLocal))
+                    {
+                        <img src="https://flagcdn.com/@(Model.CodigoBanderaLocal).svg"
+                             alt="Bandera de @Model.SeleccionLocal"
+                             class="bandera-detalle"
+                             onerror="this.style.display='none'" />
+                    }
+
+                    <div class="equipo-nombre">
+                        @Model.SeleccionLocal
+                    </div>
+
                 </div>
 
                 <div class="grupo">
                     Selección local
                 </div>
-            </div>
 
+            </div>
             <div>
                 @if (tieneMarcador)
                 {
@@ -197,13 +227,28 @@
             </div>
 
             <div class="equipo">
-                <div class="equipo-nombre">
-                    @Model.SeleccionVisitante
+
+                <div class="equipo-identidad">
+
+                    @if (!string.IsNullOrWhiteSpace(
+                        Model.CodigoBanderaVisitante))
+                    {
+                        <img src="https://flagcdn.com/@(Model.CodigoBanderaVisitante).svg"
+                             alt="Bandera de @Model.SeleccionVisitante"
+                             class="bandera-detalle"
+                             onerror="this.style.display='none'" />
+                    }
+
+                    <div class="equipo-nombre">
+                        @Model.SeleccionVisitante
+                    </div>
+
                 </div>
 
                 <div class="grupo">
                     Selección visitante
                 </div>
+
             </div>
 
         </div>

@@ -3,6 +3,23 @@
 @{
     ViewData["Title"] = "Gestión de partidos";
 }
+<style>
+    .equipo-con-bandera {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .bandera-equipo {
+        width: 30px;
+        height: 20px;
+        object-fit: cover;
+        border-radius: 3px;
+        border: 1px solid #d7dee7;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+        flex-shrink: 0;
+    }
+</style>
 @if (ViewBag.UsandoDatosTemporales == true)
 {
     <div class="alert alert-warning">
@@ -20,7 +37,7 @@ else
 {
     <div class="alert alert-success alert-dismissible fade show"
          role="alert">
-         
+
         @TempData["MensajeExito"]
 
         <button type="button"
@@ -223,108 +240,148 @@ else
 
                             <td>
                                 <div class="match-teams">
-                                    <strong>
-                                        @partido.SeleccionLocal
-                                    </strong>
+
+                                    <span class="equipo-con-bandera">
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            partido.CodigoBanderaLocal))
+                                        {
+                                            <img src="https://flagcdn.com/@(partido.CodigoBanderaLocal).svg"
+                                                 alt="Bandera de @partido.SeleccionLocal"
+                                                 class="bandera-equipo"
+                                                 loading="lazy"
+                                                 onerror="this.style.display='none'" />
+                                        }
+
+                                        <strong>
+                                            @partido.SeleccionLocal
+                                        </strong>
+
+                                    </span>
 
                                     <span>vs.</span>
+
+                                    +             <span class="equipo-con-bandera">
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                        partido.CodigoBanderaVisitante))
+                                    {
+                                        <img src="https://flagcdn.com/@(partido.CodigoBanderaVisitante).svg"
+                                             alt="Bandera de @partido.SeleccionVisitante"
+                                             class="bandera-equipo"
+                                             loading="lazy"
+                                             onerror="this.style.display='none'" />
+                                    }
 
                                     <strong>
                                         @partido.SeleccionVisitante
                                     </strong>
-                                </div>
 
-                                <small>@partido.Fase</small>
-                            </td>
+                                </span>
 
-                            <td>
+                            </div>
+
+                            <small>@partido.Fase</small>
+                        </td>
+
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(partido.Grupo) ||
+                                partido.Grupo == "-")
+                            {
+                                <span class="text-muted">
+                                    No aplica
+                                </span>
+                            }
+                            else
+                            {
                                 <span class="group-badge">
                                     @partido.Grupo
                                 </span>
-                            </td>
+                            }
+                        </td>
 
-                            <td>
-                                @partido.FechaHora.ToString("dd/MM/yyyy")
+                        <td>
+                            @partido.FechaHora.ToString("dd/MM/yyyy")
 
-                                <small class="d-block">
-                                    @partido.FechaHora.ToString("HH:mm")
-                                </small>
-                            </td>
+                            <small class="d-block">
+                                @partido.FechaHora.ToString("HH:mm")
+                            </small>
+                        </td>
 
-                            <td>
-                                @partido.Sede
-                            </td>
+                        <td>
+                            @partido.Sede
+                        </td>
 
-                            <td>
+                        <td>
 
-                                @if (partido.Estado == "PROGRAMADO")
-                                {
-                                    <span class="status-badge status-scheduled">
-                                        Programado
-                                    </span>
-                                }
-                                else if (partido.Estado == "EN_JUEGO")
-                                {
-                                    <span class="status-badge status-live">
-                                        En juego
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="status-badge status-finished">
-                                        Finalizado
-                                    </span>
-                                }
+                            @if (partido.Estado == "PROGRAMADO")
+                            {
+                                <span class="status-badge status-scheduled">
+                                    Programado
+                                </span>
+                            }
+                            else if (partido.Estado == "EN_JUEGO")
+                            {
+                                <span class="status-badge status-live">
+                                    En juego
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-badge status-finished">
+                                    Finalizado
+                                </span>
+                            }
 
-                            </td>
+                        </td>
 
-                            <td>
+                        <td>
 
-                                @if (partido.GolesLocal.HasValue &&
-                                     partido.GolesVisitante.HasValue)
-                                {
-                                    <strong class="score">
-                                        @partido.GolesLocal -
-                                        @partido.GolesVisitante
-                                    </strong>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">
-                                        Pendiente
-                                    </span>
-                                }
+                            @if (partido.GolesLocal.HasValue &&
+                                 partido.GolesVisitante.HasValue)
+                            {
+                                <strong class="score">
+                                    @partido.GolesLocal -
+                                    @partido.GolesVisitante
+                                </strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">
+                                    Pendiente
+                                </span>
+                            }
 
-                            </td>
+                        </td>
 
-                            <td class="text-end">
+                        <td class="text-end">
 
+                            <a asp-controller="Partidos"
+                               asp-action="Detalles"
+                               asp-route-id="@partido.Id"
+                               class="btn btn-sm btn-outline-primary">
+                                Ver
+                            </a>
+                            @if (partido.Estado != "FINALIZADO")
+                            {
                                 <a asp-controller="Partidos"
-                                   asp-action="Detalles"
+                                   asp-action="RegistrarResultado"
                                    asp-route-id="@partido.Id"
-                                   class="btn btn-sm btn-outline-primary">
-                                    Ver
+                                   class="btn btn-sm btn-success">
+                                    Resultado
                                 </a>
-                                @if (partido.Estado != "FINALIZADO")
-                                {
-                                    <a asp-controller="Partidos"
-                                       asp-action="RegistrarResultado"
-                                       asp-route-id="@partido.Id"
-                                       class="btn btn-sm btn-success">
-                                        Resultado
-                                    </a>
-                                }
+                            }
 
-                            </td>
+                        </td>
 
-                        </tr>
-                    }
+                    </tr>
+                }
 
-                </tbody>
+            </tbody>
 
-            </table>
+        </table>
 
-        </div>
-    }
+    </div>
+}
 
 </div>

@@ -13,10 +13,28 @@
         </p>
     </div>
 
-    <span class="development-status">
-        Sistema en desarrollo
-    </span>
+    @if (Model.ApiEstadisticasDisponible)
+    {
+        <span class="development-status">
+            Datos actualizados
+        </span>
+    }
+    else
+    {
+        <span class="development-status">
+            Servicio desconectado
+        </span>
+    }
 </div>
+
+@if (!Model.ApiEstadisticasDisponible)
+{
+    <div class="alert alert-warning">
+        No fue posible conectarse con el Servicio de Estadísticas.
+        Los contadores de selecciones y partidos aparecerán cuando Andrea
+        encienda nuevamente la API.
+    </div>
+}
 
 <div class="row g-4 mb-4">
 
@@ -48,7 +66,7 @@
         <div class="dashboard-card red">
             <h3>Usuarios</h3>
             <div class="number">@Model.TotalUsuarios</div>
-            <p>Cuentas registradas</p>
+            <p>Dato temporal</p>
         </div>
     </div>
 
@@ -125,7 +143,7 @@
                 else
                 {
                     <span class="service-badge pending">
-                        Pendiente
+                        No disponible
                     </span>
                 }
             </div>
@@ -145,14 +163,26 @@
                 else
                 {
                     <span class="service-badge pending">
-                        Pendiente
+                        No conectada
                     </span>
                 }
             </div>
 
             <div class="service-information">
-                Los servicios aparecerán disponibles cuando se configuren
-                las direcciones de las APIs de los compañeros.
+                @if (Model.ApiEstadisticasDisponible)
+                {
+                    <span>
+                        El Servicio de Estadísticas está respondiendo
+                        correctamente.
+                    </span>
+                }
+                else
+                {
+                    <span>
+                        El Servicio de Estadísticas aparecerá disponible
+                        cuando Andrea encienda WildFly y ngrok.
+                    </span>
+                }
             </div>
 
         </div>
