@@ -33,12 +33,18 @@
                     Partidos
                 </a>
 
-                <a asp-controller="Resultados" asp-action="Index">
+                <a asp-controller="Partidos"
+                   asp-action="Index"
+                   asp-route-estado="PROGRAMADO">
                     Registrar resultados
                 </a>
 
                 <a asp-controller="Usuarios" asp-action="Index">
                     Usuarios
+                </a>
+                <a asp-controller="Auditoria"
+                   asp-action="Index">
+                    Auditoría
                 </a>
 
                 <a asp-controller="Reportes" asp-action="Index">
