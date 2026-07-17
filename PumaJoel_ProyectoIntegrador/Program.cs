@@ -10,6 +10,7 @@ namespace FrontendAdministrativo
 
             builder.Services.AddControllersWithViews();
 
+
             builder.Services
                 .AddAuthentication(
                     CookieAuthenticationDefaults.AuthenticationScheme
