@@ -1,0 +1,234 @@
+﻿@model FrontendAdministrativo.Models.ViewModels.UTNGolCoinViewModel
+
+@{
+    ViewData["Title"] = "UTNGolCoin";
+}
+
+<style>
+    .coin-header h2 {
+        margin: 0;
+        color: #102a43;
+        font-weight: 700;
+    }
+
+    .coin-header p {
+        margin-top: 6px;
+        color: #6b7c93;
+    }
+
+    .coin-metric {
+        background: white;
+        padding: 20px;
+        border-radius: 13px;
+        border-left: 5px solid #f59e0b;
+        box-shadow: 0 4px 16px rgba(16, 42, 67, 0.08);
+        height: 100%;
+    }
+
+        .coin-metric span {
+            display: block;
+            color: #6b7c93;
+            font-size: 14px;
+        }
+
+        .coin-metric strong {
+            display: block;
+            margin-top: 8px;
+            color: #102a43;
+            font-size: 25px;
+        }
+
+    .coin-panel {
+        background: white;
+        padding: 25px;
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(16, 42, 67, 0.08);
+    }
+
+    .coin-status {
+        padding: 15px;
+        border-radius: 10px;
+        background: #f7f9fc;
+    }
+
+    .coin-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 22px;
+    }
+</style>
+
+<div class="coin-header mb-4">
+    <h2>Configuración UTNGolCoin</h2>
+
+    <p>
+        Administra los parámetros principales de monedas y apuestas.
+    </p>
+</div>
+
+<div class="alert alert-warning">
+    Los datos mostrados son temporales hasta conectar la API real
+    del servicio UTNGolCoin.
+</div>
+
+@if (TempData["MensajeExito"] is string mensaje)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @mensaje
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
+
+<div class="row g-3 mb-4">
+
+    <div class="col-lg-4">
+        <div class="coin-metric">
+            <span>Monedas en circulación</span>
+
+            <strong>
+                @Model.MonedasEnCirculacion.ToString("N0")
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="coin-metric">
+            <span>Total de apuestas</span>
+
+            <strong>
+                @Model.TotalApuestas
+            </strong>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="coin-metric">
+            <span>Partido más apostado</span>
+
+            <strong style="font-size: 18px;">
+                @Model.PartidoMasApostado
+            </strong>
+        </div>
+    </div>
+
+</div>
+
+<div class="coin-panel">
+
+    <h4 class="mb-3">
+        Parámetros de apuestas
+    </h4>
+
+    <form asp-controller="UTNGolCoin"
+          asp-action="Guardar"
+          method="post">
+
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger mb-3">
+        </div>
+
+        <div class="row g-3">
+
+            <div class="col-lg-4">
+                <label asp-for="BonoInicial"
+                       class="form-label">
+                </label>
+
+                <input asp-for="BonoInicial"
+                       class="form-control"
+                       type="number"
+                       min="0" />
+
+                <span asp-validation-for="BonoInicial"
+                      class="text-danger">
+                </span>
+
+                <small class="text-muted">
+                    Monedas entregadas al crear una cuenta.
+                </small>
+            </div>
+
+            <div class="col-lg-4">
+                <label asp-for="MonedasPorAcierto"
+                       class="form-label">
+                </label>
+
+                <input asp-for="MonedasPorAcierto"
+                       class="form-control"
+                       type="number"
+                       min="1" />
+
+                <span asp-validation-for="MonedasPorAcierto"
+                      class="text-danger">
+                </span>
+
+                <small class="text-muted">
+                    Recompensa base por acertar un resultado.
+                </small>
+            </div>
+
+            <div class="col-lg-4">
+                <label asp-for="LimiteMaximoApuesta"
+                       class="form-label">
+                </label>
+
+                <input asp-for="LimiteMaximoApuesta"
+                       class="form-control"
+                       type="number"
+                       min="1" />
+
+                <span asp-validation-for="LimiteMaximoApuesta"
+                      class="text-danger">
+                </span>
+
+                <small class="text-muted">
+                    Máximo de monedas permitidas por apuesta.
+                </small>
+            </div>
+
+        </div>
+
+        <div class="coin-status mt-4">
+
+            <div class="form-check form-switch">
+
+                <input asp-for="ApuestasHabilitadas"
+                       class="form-check-input"
+                       type="checkbox"
+                       role="switch" />
+
+                <label asp-for="ApuestasHabilitadas"
+                       class="form-check-label">
+                </label>
+
+            </div>
+
+            <small class="text-muted">
+                Al desactivar esta opción no deberían registrarse
+                nuevas apuestas.
+            </small>
+
+        </div>
+
+        <div class="coin-actions">
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Guardar configuración
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
