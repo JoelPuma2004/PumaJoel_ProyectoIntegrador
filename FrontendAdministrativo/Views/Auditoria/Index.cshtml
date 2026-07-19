@@ -1,0 +1,293 @@
+﻿@model FrontendAdministrativo.Models.ViewModels.AuditoriaIndexViewModel
+
+@{
+    ViewData["Title"] = "Auditoría";
+
+    int totalModulos = Model.Registros
+        .Select(r => r.Modulo)
+        .Distinct()
+        .Count();
+}
+
+<style>
+    .auditoria-titulo h2 {
+        margin: 0;
+        color: #102a43;
+        font-weight: 700;
+    }
+
+    .auditoria-titulo p {
+        margin-top: 5px;
+        color: #6b7c93;
+    }
+
+    .auditoria-card {
+        background: white;
+        padding: 22px;
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(16, 42, 67, 0.08);
+    }
+
+    .auditoria-resumen {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 5px solid #102a43;
+        box-shadow: 0 4px 14px rgba(16, 42, 67, 0.08);
+    }
+
+        .auditoria-resumen span {
+            display: block;
+            color: #6b7c93;
+            font-size: 14px;
+        }
+
+        .auditoria-resumen strong {
+            display: block;
+            margin-top: 7px;
+            color: #102a43;
+            font-size: 25px;
+        }
+
+    .modulo-badge {
+        display: inline-block;
+        padding: 6px 11px;
+        border-radius: 18px;
+        background: #e8eef7;
+        color: #102a43;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .fecha-registro {
+        white-space: nowrap;
+        font-size: 14px;
+    }
+
+    .descripcion-registro {
+        color: #5d6d7e;
+        font-size: 14px;
+    }
+</style>
+
+<div class="auditoria-titulo mb-4">
+    <h2>Auditoría administrativa</h2>
+
+    <p>
+        Historial de las acciones realizadas dentro del sistema.
+    </p>
+</div>
+
+<div class="alert alert-warning">
+    Los registros mostrados son temporales porque todavía no existe
+    un endpoint real de auditoría en el backend.
+</div>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-lg-4">
+        <div class="auditoria-resumen">
+            <span>Registros encontrados</span>
+            <strong>@Model.TotalRegistros</strong>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="auditoria-resumen">
+            <span>Módulos registrados</span>
+            <strong>@totalModulos</strong>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="auditoria-resumen">
+            <span>Última actividad</span>
+
+            <strong style="font-size: 18px;">
+                @if (Model.UltimaActividad.HasValue)
+                {
+                    @(Model.UltimaActividad.Value
+                        .ToString("dd/MM/yyyy HH:mm"))
+                }
+                else
+                {
+                    <span>Sin actividad</span>
+                }
+            </strong>
+        </div>
+    </div>
+
+</div>
+
+<div class="auditoria-card mb-4">
+
+    <form asp-controller="Auditoria"
+          asp-action="Index"
+          method="get">
+
+        <div class="row g-3 align-items-end">
+
+            <div class="col-lg-5">
+                <label class="form-label">
+                    Buscar actividad
+                </label>
+
+                <input type="text"
+                       name="buscar"
+                       value="@Model.Buscar"
+                       class="form-control"
+                       placeholder="Usuario, acción o descripción..." />
+            </div>
+
+            <div class="col-lg-4">
+                <label class="form-label">
+                    Módulo
+                </label>
+
+                <select name="modulo"
+                        class="form-select">
+
+                    <option value="">
+                        Todos los módulos
+                    </option>
+
+                    @if (Model.ModuloSeleccionado == "Seguridad")
+                    {
+                        <option value="Seguridad" selected>
+                            Seguridad
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="Seguridad">
+                            Seguridad
+                        </option>
+                    }
+
+                    @if (Model.ModuloSeleccionado == "Partidos")
+                    {
+                        <option value="Partidos" selected>
+                            Partidos
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="Partidos">
+                            Partidos
+                        </option>
+                    }
+
+                    @if (Model.ModuloSeleccionado == "Usuarios")
+                    {
+                        <option value="Usuarios" selected>
+                            Usuarios
+                        </option>
+                    }
+                    else
+                    {
+                        <option value="Usuarios">
+                            Usuarios
+                        </option>
+                    }
+
+                </select>
+            </div>
+
+            <div class="col-lg-3">
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Filtrar
+                </button>
+
+                <a asp-controller="Auditoria"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Limpiar
+                </a>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+<div class="auditoria-card">
+
+    <h4 class="mb-3">
+        Historial de actividades
+    </h4>
+
+    @if (Model.Registros.Count == 0)
+    {
+        <div class="alert alert-info mb-0">
+            No se encontraron registros con los filtros seleccionados.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Fecha y hora</th>
+                        <th>Usuario</th>
+                        <th>Módulo</th>
+                        <th>Acción</th>
+                        <th>Descripción</th>
+                        <th>Dirección IP</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var registro in Model.Registros)
+                    {
+                        <tr>
+
+                            <td class="fecha-registro">
+                                @(registro.FechaHora
+                                    .ToString("dd/MM/yyyy HH:mm"))
+                            </td>
+
+                            <td>
+                                <strong>
+                                    @registro.Usuario
+                                </strong>
+                            </td>
+
+                            <td>
+                                <span class="modulo-badge">
+                                    @registro.Modulo
+                                </span>
+                            </td>
+
+                            <td>
+                                @registro.Accion
+                            </td>
+
+                            <td class="descripcion-registro">
+                                @registro.Descripcion
+                            </td>
+
+                            <td>
+                                <code>
+                                    @registro.DireccionIp
+                                </code>
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+</div>

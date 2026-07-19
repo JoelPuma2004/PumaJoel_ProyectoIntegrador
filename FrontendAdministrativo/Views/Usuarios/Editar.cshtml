@@ -1,0 +1,214 @@
+﻿@model FrontendAdministrativo.Models.ViewModels.EditarUsuarioViewModel
+
+@{
+    ViewData["Title"] = "Editar usuario";
+}
+
+<style>
+    .editar-usuario-contenedor {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    .editar-encabezado {
+        margin-bottom: 22px;
+    }
+
+        .editar-encabezado h2 {
+            margin: 0;
+            color: #102a43;
+            font-weight: 700;
+        }
+
+        .editar-encabezado p {
+            margin: 6px 0 0;
+            color: #6b7c93;
+        }
+
+    .editar-card {
+        background: white;
+        padding: 28px;
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(16, 42, 67, 0.10);
+    }
+
+    .usuario-resumen {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 18px;
+        margin-bottom: 24px;
+        background: #f7f9fc;
+        border-radius: 11px;
+    }
+
+    .usuario-avatar-grande {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: #102a43;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .usuario-resumen-nombre {
+        color: #102a43;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .usuario-resumen-correo {
+        color: #6b7c93;
+        font-size: 14px;
+    }
+
+    .estado-cuenta {
+        padding: 16px;
+        margin-top: 20px;
+        background: #f7f9fc;
+        border-radius: 10px;
+    }
+
+    .acciones-edicion {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 25px;
+    }
+</style>
+
+@{
+    string inicial =
+        string.IsNullOrWhiteSpace(Model.NombreCompleto)
+            ? "U"
+            : Model.NombreCompleto
+                .Substring(0, 1)
+                .ToUpperInvariant();
+}
+
+<div class="editar-usuario-contenedor">
+
+    <div class="editar-encabezado">
+        <h2>Editar usuario</h2>
+
+        <p>
+            Modifica el rol y el estado de la cuenta seleccionada.
+        </p>
+    </div>
+
+    <div class="editar-card">
+
+        <div class="usuario-resumen">
+
+            <div class="usuario-avatar-grande">
+                @inicial
+            </div>
+
+            <div>
+                <div class="usuario-resumen-nombre">
+                    @Model.NombreCompleto
+                </div>
+
+                <div class="usuario-resumen-correo">
+                    @Model.Correo
+                </div>
+            </div>
+
+        </div>
+
+        <form asp-controller="Usuarios"
+              asp-action="Editar"
+              method="post">
+
+            @Html.AntiForgeryToken()
+
+            <input asp-for="Id"
+                   type="hidden" />
+
+            <input asp-for="NombreCompleto"
+                   type="hidden" />
+
+            <input asp-for="Correo"
+                   type="hidden" />
+
+            <div asp-validation-summary="ModelOnly"
+                 class="text-danger mb-3">
+            </div>
+
+            <div class="mb-3">
+
+                <label asp-for="Rol"
+                       class="form-label">
+                    Rol del usuario
+                </label>
+
+                <select asp-for="Rol"
+                        class="form-select">
+
+                    <option value="USUARIO">
+                        Usuario
+                    </option>
+
+                    <option value="ADMINISTRADOR">
+                        Administrador
+                    </option>
+
+                </select>
+
+                <span asp-validation-for="Rol"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="estado-cuenta">
+
+                <div class="form-check form-switch">
+
+                    <input asp-for="Activo"
+                           class="form-check-input"
+                           type="checkbox"
+                           role="switch" />
+
+                    <label asp-for="Activo"
+                           class="form-check-label">
+                        Cuenta activa
+                    </label>
+
+                </div>
+
+                <small class="text-muted">
+                    Una cuenta inactiva no debería tener acceso al sistema.
+                </small>
+
+            </div>
+
+            <div class="acciones-edicion">
+
+                <a asp-controller="Usuarios"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Guardar cambios
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
