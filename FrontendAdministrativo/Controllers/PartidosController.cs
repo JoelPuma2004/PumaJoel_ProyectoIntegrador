@@ -442,12 +442,24 @@ namespace FrontendAdministrativo.Controllers
         // =========================================================
 
         [HttpGet]
-        public async Task<IActionResult> RegistrarResultado(
-            int id)
+        public async Task<IActionResult> RegistrarResultado(int id)
         {
             PartidoApiDto? partidoApi =
                 await _estadisticasApiService
                     .ObtenerPartidoPorIdAsync(id);
+
+            // Si el endpoint individual no encuentra el partido,
+            // buscamos el ID dentro del listado completo.
+            if (partidoApi is null)
+            {
+                List<PartidoApiDto>? todosLosPartidos =
+                    await _estadisticasApiService
+                        .ObtenerPartidosAsync();
+
+                partidoApi = todosLosPartidos?
+                    .FirstOrDefault(partido =>
+                        partido.Id == id);
+            }
 
             if (partidoApi is not null)
             {
@@ -480,13 +492,17 @@ namespace FrontendAdministrativo.Controllers
                 return View(modeloApi);
             }
 
+            // Respaldo temporal cuando la API no está disponible.
             PartidoDto? partidoTemporal =
                 PartidosTemporales.FirstOrDefault(
                     partido => partido.Id == id);
 
             if (partidoTemporal is null)
             {
-                return NotFound();
+                TempData["MensajeError"] =
+                    "No fue posible encontrar el partido seleccionado.";
+
+                return RedirectToAction(nameof(Index));
             }
 
             var modeloTemporal =
