@@ -8,56 +8,103 @@ namespace FrontendAdministrativo
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var builder =
+                WebApplication.CreateBuilder(args);
 
             builder.Services.AddControllersWithViews();
+
+            // ==========================================
+            // API DE ESTADÍSTICAS
+            // ==========================================
+
             builder.Services.AddHttpClient<EstadisticasApiService>(
-    client =>
-    {
-        string? baseUrl =
-            builder.Configuration["ApiEstadisticas:BaseUrl"];
+                client =>
+                {
+                    string? baseUrl =
+                        builder.Configuration[
+                            "ApiEstadisticas:BaseUrl"];
 
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            throw new InvalidOperationException(
-                "No se configuró la URL de la API de Estadísticas.");
-        }
+                    if (string.IsNullOrWhiteSpace(baseUrl))
+                    {
+                        throw new InvalidOperationException(
+                            "No se configuró la URL de la API de Estadísticas.");
+                    }
 
-        client.BaseAddress =
-            new Uri(baseUrl.TrimEnd('/') + "/");
+                    client.BaseAddress =
+                        new Uri(baseUrl.TrimEnd('/') + "/");
 
-        client.Timeout = TimeSpan.FromSeconds(15);
+                    client.Timeout =
+                        TimeSpan.FromSeconds(15);
 
-        client.DefaultRequestHeaders.TryAddWithoutValidation(
-            "ngrok-skip-browser-warning",
-            "true");
-    });
+                    client.DefaultRequestHeaders
+                        .TryAddWithoutValidation(
+                            "ngrok-skip-browser-warning",
+                            "true");
+                });
 
+            // ==========================================
+            // API UTNGOLCOIN
+            // ==========================================
+
+            builder.Services.AddHttpClient<UTNGolCoinApiService>(
+                client =>
+                {
+                    string? baseUrl =
+                        builder.Configuration[
+                            "ApiUTNGolCoin:BaseUrl"];
+
+                    if (string.IsNullOrWhiteSpace(baseUrl))
+                    {
+                        throw new InvalidOperationException(
+                            "No se configuró la URL de la API UTNGolCoin.");
+                    }
+
+                    client.BaseAddress =
+                        new Uri(baseUrl.TrimEnd('/') + "/");
+
+                    client.Timeout =
+                        TimeSpan.FromSeconds(15);
+                });
+
+            // ==========================================
+            // AUTENTICACIÓN
+            // ==========================================
 
             builder.Services
                 .AddAuthentication(
-                    CookieAuthenticationDefaults.AuthenticationScheme
-                )
+                    CookieAuthenticationDefaults
+                        .AuthenticationScheme)
                 .AddCookie(options =>
                 {
-                    options.LoginPath = "/Auth/Login";
-                    options.AccessDeniedPath = "/Auth/AccesoDenegado";
+                    options.LoginPath =
+                        "/Auth/Login";
 
-                    options.Cookie.Name = "UTNGolMundial.Admin";
-                    options.Cookie.HttpOnly = true;
+                    options.AccessDeniedPath =
+                        "/Auth/AccesoDenegado";
+
+                    options.Cookie.Name =
+                        "UTNGolMundial.Admin";
+
+                    options.Cookie.HttpOnly =
+                        true;
+
+                    // Permite guardar la cookie cuando se ingresa
+                    // mediante HTTP usando la dirección IP.
                     options.Cookie.SecurePolicy =
-                        CookieSecurePolicy.Always;
+                        CookieSecurePolicy.SameAsRequest;
+
                     options.Cookie.SameSite =
                         SameSiteMode.Lax;
 
                     options.ExpireTimeSpan =
                         TimeSpan.FromMinutes(30);
 
-                    options.SlidingExpiration = true;
+                    options.SlidingExpiration =
+                        true;
                 });
 
-            // Todas las páginas quedan restringidas al administrador,
-            // excepto las que tengan [AllowAnonymous].
+            // Todas las páginas quedan restringidas
+            // al administrador.
             builder.Services.AddAuthorization(options =>
             {
                 options.FallbackPolicy =
@@ -71,14 +118,19 @@ namespace FrontendAdministrativo
 
             if (!app.Environment.IsDevelopment())
             {
-                app.UseExceptionHandler("/Home/Error");
+                app.UseExceptionHandler(
+                    "/Home/Error");
+
                 app.UseHsts();
             }
 
-            app.UseHttpsRedirection();
+            // Se deja desactivado para poder ingresar mediante:
+            // http://192.168.0.102:5203
+            //
+            // app.UseHttpsRedirection();
+
             app.UseRouting();
 
-            // El orden es importante.
             app.UseAuthentication();
             app.UseAuthorization();
 

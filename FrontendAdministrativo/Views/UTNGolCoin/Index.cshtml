@@ -38,6 +38,11 @@
             font-size: 25px;
         }
 
+        .coin-metric small {
+            display: block;
+            margin-top: 7px;
+        }
+
     .coin-panel {
         background: white;
         padding: 25px;
@@ -62,23 +67,53 @@
     <h2>Configuración UTNGolCoin</h2>
 
     <p>
-        Administra los parámetros principales de monedas y apuestas.
+        Consulta el estado de las billeteras y administra
+        parámetros temporales de monedas y apuestas.
     </p>
 </div>
 
-<div class="alert alert-warning">
-    Los datos mostrados son temporales hasta conectar la API real
-    del servicio UTNGolCoin.
-</div>
+@if (Model.ServicioDisponible)
+{
+    <div class="alert alert-success">
+        Conectado correctamente con la API UTNGolCoin de Mayra.
+        Las monedas en circulación y las billeteras son datos reales.
+    </div>
+}
+else
+{
+    <div class="alert alert-danger">
+        No fue posible conectarse con la API UTNGolCoin.
+        Revisa que Mayra tenga el servicio encendido y que ambos
+        equipos estén conectados a la misma red.
+    </div>
+}
+
+@if (Model.ConfiguracionDisponible)
+{
+    <div class="alert alert-success">
+        La configuración de apuestas está conectada
+        con la API real de Mayra.
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        No fue posible obtener la configuración real
+        de UTNGolCoin.
+    </div>
+}
 
 @if (TempData["MensajeExito"] is string mensaje)
 {
-    <div class="alert alert-success alert-dismissible fade show">
+    <div class="alert alert-success alert-dismissible fade show"
+         role="alert">
+
         @mensaje
 
         <button type="button"
                 class="btn-close"
-                data-bs-dismiss="alert">
+                data-bs-dismiss="alert"
+                aria-label="Cerrar">
         </button>
     </div>
 }
@@ -92,30 +127,123 @@
             <strong>
                 @Model.MonedasEnCirculacion.ToString("N0")
             </strong>
+
+            <small class="text-muted">
+                Suma de los saldos obtenidos del ranking real.
+            </small>
         </div>
     </div>
 
     <div class="col-lg-4">
         <div class="coin-metric">
-            <span>Total de apuestas</span>
+            <span>Billeteras registradas</span>
 
             <strong>
-                @Model.TotalApuestas
+                @Model.TotalBilleteras
             </strong>
+
+            <small class="text-muted">
+                Usuarios encontrados en la API UTNGolCoin.
+            </small>
         </div>
     </div>
 
     <div class="col-lg-4">
         <div class="coin-metric">
-            <span>Partido más apostado</span>
+            <span>Estado del servicio</span>
 
-            <strong style="font-size: 18px;">
-                @Model.PartidoMasApostado
-            </strong>
+            @if (Model.ServicioDisponible)
+            {
+                <strong class="text-success"
+                        style="font-size: 18px;">
+                    Conectado
+                </strong>
+
+                <small class="text-muted">
+                    La API respondió correctamente.
+                </small>
+            }
+            else
+            {
+                <strong class="text-danger"
+                        style="font-size: 18px;">
+                    Desconectado
+                </strong>
+
+                <small class="text-muted">
+                    No se pudo consultar el ranking.
+                </small>
+            }
         </div>
     </div>
 
 </div>
+
+@if (Model.ServicioDisponible && Model.Ranking.Count > 0)
+{
+    <div class="coin-panel mb-4">
+
+        <h4 class="mb-3">
+            Ranking de billeteras
+        </h4>
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Posición</th>
+                        <th>Usuario</th>
+                        <th class="text-end">Saldo</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @{
+                        int posicion = 1;
+                    }
+
+                    @foreach (var usuario in Model.Ranking)
+                    {
+                        <tr>
+                            <td>
+                                <strong>
+                                    #@posicion
+                                </strong>
+                            </td>
+
+                            <td>
+                                Usuario @usuario.UsuarioId
+                            </td>
+
+                            <td class="text-end">
+                                <strong>
+                                    @usuario.Saldo.ToString("N0")
+                                    UTNGolCoin
+                                </strong>
+                            </td>
+                        </tr>
+
+                        posicion++;
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+}
+else if (Model.ServicioDisponible)
+{
+    <div class="alert alert-info">
+        La API está conectada, pero todavía no existen billeteras
+        registradas en el ranking.
+    </div>
+}
 
 <div class="coin-panel">
 
@@ -136,6 +264,7 @@
         <div class="row g-3">
 
             <div class="col-lg-4">
+
                 <label asp-for="BonoInicial"
                        class="form-label">
                 </label>
@@ -143,7 +272,9 @@
                 <input asp-for="BonoInicial"
                        class="form-control"
                        type="number"
+                       step="0.01"
                        min="0" />
+
 
                 <span asp-validation-for="BonoInicial"
                       class="text-danger">
@@ -152,9 +283,11 @@
                 <small class="text-muted">
                     Monedas entregadas al crear una cuenta.
                 </small>
+
             </div>
 
             <div class="col-lg-4">
+
                 <label asp-for="MonedasPorAcierto"
                        class="form-label">
                 </label>
@@ -162,6 +295,7 @@
                 <input asp-for="MonedasPorAcierto"
                        class="form-control"
                        type="number"
+                       step="0.01"
                        min="1" />
 
                 <span asp-validation-for="MonedasPorAcierto"
@@ -171,9 +305,11 @@
                 <small class="text-muted">
                     Recompensa base por acertar un resultado.
                 </small>
+
             </div>
 
             <div class="col-lg-4">
+
                 <label asp-for="LimiteMaximoApuesta"
                        class="form-label">
                 </label>
@@ -181,6 +317,7 @@
                 <input asp-for="LimiteMaximoApuesta"
                        class="form-control"
                        type="number"
+                       step="0.01"
                        min="1" />
 
                 <span asp-validation-for="LimiteMaximoApuesta"
@@ -190,6 +327,7 @@
                 <small class="text-muted">
                     Máximo de monedas permitidas por apuesta.
                 </small>
+
             </div>
 
         </div>
@@ -210,8 +348,7 @@
             </div>
 
             <small class="text-muted">
-                Al desactivar esta opción no deberían registrarse
-                nuevas apuestas.
+                Los cambios se guardarán en la API real de UTNGolCoin.
             </small>
 
         </div>

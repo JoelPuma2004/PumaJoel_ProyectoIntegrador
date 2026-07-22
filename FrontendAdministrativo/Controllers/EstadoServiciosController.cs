@@ -11,14 +11,22 @@ namespace FrontendAdministrativo.Controllers
         private readonly EstadisticasApiService
             _estadisticasApiService;
 
-        private readonly IConfiguration _configuration;
+        private readonly UTNGolCoinApiService
+            _utnGolCoinApiService;
+
+        private readonly IConfiguration
+            _configuration;
 
         public EstadoServiciosController(
             EstadisticasApiService estadisticasApiService,
+            UTNGolCoinApiService utnGolCoinApiService,
             IConfiguration configuration)
         {
             _estadisticasApiService =
                 estadisticasApiService;
+
+            _utnGolCoinApiService =
+                utnGolCoinApiService;
 
             _configuration =
                 configuration;
@@ -34,16 +42,25 @@ namespace FrontendAdministrativo.Controllers
 
             string urlUtnGolCoin =
                 _configuration[
-                    "ApiUtnGolCoin:BaseUrl"
+                    "ApiUTNGolCoin:BaseUrl"
                 ] ?? string.Empty;
 
             bool estadisticasConfigurado =
                 !string.IsNullOrWhiteSpace(
                     urlEstadisticas);
 
+            bool utnGolCoinConfigurado =
+                !string.IsNullOrWhiteSpace(
+                    urlUtnGolCoin);
+
             bool estadisticasDisponible =
                 estadisticasConfigurado &&
                 await _estadisticasApiService
+                    .EstaDisponibleAsync();
+
+            bool utnGolCoinDisponible =
+                utnGolCoinConfigurado &&
+                await _utnGolCoinApiService
                     .EstaDisponibleAsync();
 
             var modelo =
@@ -84,10 +101,10 @@ namespace FrontendAdministrativo.Controllers
                                     urlUtnGolCoin,
 
                                 Configurado =
-                                    !string.IsNullOrWhiteSpace(
-                                        urlUtnGolCoin),
+                                    utnGolCoinConfigurado,
 
-                                Disponible = false
+                                Disponible =
+                                    utnGolCoinDisponible
                             }
                         }
                 };

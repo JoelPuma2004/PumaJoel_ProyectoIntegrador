@@ -8,29 +8,51 @@ namespace FrontendAdministrativo.Controllers
     [Authorize(Roles = "ADMINISTRADOR")]
     public class HomeController : Controller
     {
-        private readonly EstadisticasApiService _estadisticasApiService;
+        private readonly EstadisticasApiService
+            _estadisticasApiService;
+
+        private readonly UTNGolCoinApiService
+            _utnGolCoinApiService;
 
         public HomeController(
-            EstadisticasApiService estadisticasApiService)
+            EstadisticasApiService estadisticasApiService,
+            UTNGolCoinApiService utnGolCoinApiService)
         {
-            _estadisticasApiService = estadisticasApiService;
+            _estadisticasApiService =
+                estadisticasApiService;
+
+            _utnGolCoinApiService =
+                utnGolCoinApiService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index()
         {
             var tareaPartidos =
-                _estadisticasApiService.ObtenerPartidosAsync();
+                _estadisticasApiService
+                    .ObtenerPartidosAsync();
 
             var tareaSelecciones =
-                _estadisticasApiService.ObtenerSeleccionesAsync();
+                _estadisticasApiService
+                    .ObtenerSeleccionesAsync();
+
+            var tareaUtnGolCoin =
+                _utnGolCoinApiService
+                    .EstaDisponibleAsync();
 
             await Task.WhenAll(
                 tareaPartidos,
-                tareaSelecciones);
+                tareaSelecciones,
+                tareaUtnGolCoin);
 
-            var partidos = await tareaPartidos;
-            var selecciones = await tareaSelecciones;
+            var partidos =
+                await tareaPartidos;
+
+            var selecciones =
+                await tareaSelecciones;
+
+            bool apiUtnGolCoinDisponible =
+                await tareaUtnGolCoin;
 
             bool apiEstadisticasDisponible =
                 partidos is not null &&
@@ -94,24 +116,53 @@ namespace FrontendAdministrativo.Controllers
                     });
             }
 
-            var dashboard = new DashboardViewModel
+            if (apiUtnGolCoinDisponible)
             {
-                TotalSelecciones = totalSelecciones,
-                TotalPartidos = totalPartidos,
-                PartidosFinalizados = partidosFinalizados,
+                actividades.Add(
+                    new ActividadRecienteViewModel
+                    {
+                        Descripcion =
+                            "Servicio UTNGolCoin conectado correctamente",
+                        Tipo = "API",
+                        Fecha = DateTime.Now
+                    });
+            }
+            else
+            {
+                actividades.Add(
+                    new ActividadRecienteViewModel
+                    {
+                        Descripcion =
+                            "Servicio UTNGolCoin no disponible",
+                        Tipo = "Advertencia",
+                        Fecha = DateTime.Now
+                    });
+            }
 
-                // Temporal hasta conectar la API de usuarios.
-                TotalUsuarios = 3,
+            var dashboard =
+                new DashboardViewModel
+                {
+                    TotalSelecciones =
+                        totalSelecciones,
 
-                ApiEstadisticasDisponible =
-                    apiEstadisticasDisponible,
+                    TotalPartidos =
+                        totalPartidos,
 
-                // Permanecerá apagado hasta conectar
-                // el servicio de UTNGolCoin.
-                ApiUtnGolCoinDisponible = false,
+                    PartidosFinalizados =
+                        partidosFinalizados,
 
-                ActividadesRecientes = actividades
-            };
+                    // Temporal hasta conectar la API de usuarios.
+                    TotalUsuarios = 3,
+
+                    ApiEstadisticasDisponible =
+                        apiEstadisticasDisponible,
+
+                    ApiUtnGolCoinDisponible =
+                        apiUtnGolCoinDisponible,
+
+                    ActividadesRecientes =
+                        actividades
+                };
 
             return View(dashboard);
         }

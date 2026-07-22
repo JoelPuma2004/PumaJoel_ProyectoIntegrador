@@ -239,6 +239,125 @@ namespace FrontendAdministrativo.Services
                 return null;
             }
         }
+        public async Task<List<SedeApiDto>?> ObtenerSedesAsync()
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.GetAsync("sedes");
+
+                respuesta.EnsureSuccessStatusCode();
+
+                return await respuesta.Content
+                    .ReadFromJsonAsync<List<SedeApiDto>>();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible obtener las sedes.");
+
+                return null;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La consulta de sedes tardó demasiado.");
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La respuesta de sedes no tiene el formato esperado.");
+
+                return null;
+            }
+        }
+
+        public async Task<List<GrupoApiDto>?> ObtenerGruposAsync()
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.GetAsync("grupos");
+
+                respuesta.EnsureSuccessStatusCode();
+
+                return await respuesta.Content
+                    .ReadFromJsonAsync<List<GrupoApiDto>>();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible obtener los grupos.");
+
+                return null;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La consulta de grupos tardó demasiado.");
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La respuesta de grupos no tiene el formato esperado.");
+
+                return null;
+            }
+        }
+
+        public async Task<bool> CrearPartidoAsync(
+            CrearPartidoApiDto partido)
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.PostAsJsonAsync(
+                        "partidos",
+                        partido);
+
+                if (respuesta.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+
+                string contenidoError =
+                    await respuesta.Content.ReadAsStringAsync();
+
+                _logger.LogWarning(
+                    "La API no pudo crear el partido. " +
+                    "Código: {Codigo}. Respuesta: {Respuesta}",
+                    respuesta.StatusCode,
+                    contenidoError);
+
+                return false;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible conectarse para crear el partido.");
+
+                return false;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La creación del partido tardó demasiado.");
+
+                return false;
+            }
+        }
 
         public async Task<bool> EstaDisponibleAsync()
         {
