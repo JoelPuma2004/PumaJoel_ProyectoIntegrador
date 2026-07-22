@@ -84,7 +84,47 @@ namespace FrontendAdministrativo.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AvanzarDia()
+        {
+            SimulacionDiaApiDto? resultado =
+                await _utnGolCoinApiService
+                    .AvanzarDiaAsync();
 
+            if (resultado is null)
+            {
+                TempData["MensajeError"] =
+                    "No fue posible avanzar la fecha simulada. " +
+                    "Verifique que la API de UTNGolCoin esté activa.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (resultado.UsuariosBeneficiados == 0)
+            {
+                TempData["MensajeExito"] =
+                    $"La fecha simulada avanzó al " +
+                    $"{resultado.FechaSimulada:dd/MM/yyyy}. " +
+                    "No había billeteras con saldo cero.";
+            }
+            else
+            {
+                string palabraUsuario =
+                    resultado.UsuariosBeneficiados == 1
+                        ? "usuario fue beneficiado"
+                        : "usuarios fueron beneficiados";
+
+                TempData["MensajeExito"] =
+                    $"La fecha simulada avanzó al " +
+                    $"{resultado.FechaSimulada:dd/MM/yyyy}. " +
+                    $"{resultado.UsuariosBeneficiados} " +
+                    $"{palabraUsuario} y se entregaron " +
+                    $"{resultado.MonedasEntregadas:0.##} UTNGolCoin.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
         private async Task CargarDatosRealesAsync(
             UTNGolCoinViewModel modelo)
         {

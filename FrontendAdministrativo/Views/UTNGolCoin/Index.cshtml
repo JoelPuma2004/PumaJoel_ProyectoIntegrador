@@ -117,6 +117,20 @@ else
         </button>
     </div>
 }
+@if (TempData["MensajeError"] is string mensajeError)
+{
+    <div class="alert alert-danger alert-dismissible fade show"
+         role="alert">
+
+        @mensajeError
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert"
+                aria-label="Cerrar">
+        </button>
+    </div>
+}
 
 <div class="row g-3 mb-4">
 
@@ -175,6 +189,62 @@ else
                 </small>
             }
         </div>
+    </div>
+
+</div>
+<div class="coin-panel mb-4">
+
+    <div class="row align-items-center g-3">
+
+        <div class="col-lg-8">
+
+            <h4 class="mb-2">
+                Simulación diaria de UTNGolCoin
+            </h4>
+
+            <p class="text-muted mb-0">
+                Avanza la fecha económica un día y entrega
+                1 UTNGolCoin únicamente a las billeteras
+                cuyo saldo sea exactamente 0.
+            </p>
+
+            <small class="text-muted">
+                Esta acción no modifica partidos, apuestas
+                ni resultados del torneo.
+            </small>
+
+        </div>
+
+        <div class="col-lg-4 text-lg-end">
+
+            <form id="formAvanzarDia"
+                  asp-controller="UTNGolCoin"
+                  asp-action="AvanzarDia"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                @if (Model.ServicioDisponible)
+                {
+                    <button id="btnAvanzarDia"
+                            type="submit"
+                            class="btn btn-warning">
+                        Simular avance de 1 día
+                    </button>
+                }
+                else
+                {
+                    <button type="button"
+                            class="btn btn-warning"
+                            disabled>
+                        Simular avance de 1 día
+                    </button>
+                }
+
+            </form>
+
+        </div>
+
     </div>
 
 </div>
@@ -367,5 +437,48 @@ else if (Model.ServicioDisponible)
 </div>
 
 @section Scripts {
+
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function() {
+
+                const formulario =
+                    document.getElementById(
+                        "formAvanzarDia");
+
+                const boton =
+                    document.getElementById(
+                        "btnAvanzarDia");
+
+                if (!formulario || !boton) {
+                    return;
+                }
+
+                formulario.addEventListener(
+                    "submit",
+                    function(evento) {
+
+                        const confirmado =
+                            confirm(
+                                "¿Está seguro de avanzar " +
+                                "la fecha simulada un día?\n\n" +
+                                "Se entregará 1 UTNGolCoin " +
+                                "a cada billetera que tenga " +
+                                "saldo 0."
+                            );
+
+                        if (!confirmado) {
+                            evento.preventDefault();
+                            return;
+                        }
+
+                        boton.disabled = true;
+                        boton.textContent =
+                            "Procesando simulación...";
+                    });
+            });
+    </script>
 }

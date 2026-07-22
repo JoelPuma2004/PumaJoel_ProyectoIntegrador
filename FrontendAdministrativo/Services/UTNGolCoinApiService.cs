@@ -169,6 +169,74 @@ namespace FrontendAdministrativo.Services
                 return false;
             }
         }
+        // ==========================================
+        // SIMULAR AVANCE DE UN DÍA
+        // ==========================================
+
+        public async Task<SimulacionDiaApiDto?> AvanzarDiaAsync()
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.PostAsync(
+                        "simulacion/avanzar-dia",
+                        content: null);
+
+                string contenido =
+                    await respuesta.Content.ReadAsStringAsync();
+
+                if (!respuesta.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning(
+                        "No se pudo avanzar el día. " +
+                        "Código: {Codigo}. Respuesta: {Respuesta}",
+                        respuesta.StatusCode,
+                        contenido);
+
+                    return null;
+                }
+
+                if (string.IsNullOrWhiteSpace(contenido))
+                {
+                    _logger.LogWarning(
+                        "La simulación respondió sin información.");
+
+                    return null;
+                }
+
+                return JsonSerializer.Deserialize<SimulacionDiaApiDto>(
+                    contenido,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible ejecutar la simulación.");
+
+                return null;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La simulación tardó demasiado.");
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La respuesta de simulación no tiene " +
+                    "el formato esperado.");
+
+                return null;
+            }
+        }
         public async Task<bool> EstaDisponibleAsync()
         {
             try

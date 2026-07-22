@@ -253,7 +253,7 @@ namespace FrontendAdministrativo.Controllers
 
             HashSet<int> numerosUtilizados =
                 partidosExistentes
-                    .Select(partido => partido.Id)
+                    .Select(partido => partido.NumeroPartidoFifa)
                     .ToHashSet();
 
             int siguienteNumero =
@@ -286,6 +286,14 @@ namespace FrontendAdministrativo.Controllers
 
             await CargarCatalogosAsync(modelo);
 
+            if (modelo.NumeroPartidoFifa >= 97 &&
+                modelo.NumeroPartidoFifa <= 104)
+            {
+                AsignarEquiposClasificados(
+                    modelo,
+                    partidosExistentes);
+            }
+
             return View(modelo);
         }
 
@@ -313,17 +321,38 @@ namespace FrontendAdministrativo.Controllers
                     "El número del partido no es válido.");
             }
 
-            // Evita repetir un número ya registrado.
             bool numeroRepetido =
-                partidosExistentes.Any(partido =>
-                    partido.Id ==
-                    modelo.NumeroPartidoFifa);
+    partidosExistentes.Any(partido =>
+        partido.NumeroPartidoFifa ==
+        modelo.NumeroPartidoFifa);
 
             if (numeroRepetido)
             {
                 ModelState.AddModelError(
                     nameof(modelo.NumeroPartidoFifa),
                     "Ya existe un partido con ese número.");
+            }
+            if (modelo.NumeroPartidoFifa >= 97 &&
+    modelo.NumeroPartidoFifa <= 104)
+            {
+                ModelState.Remove(
+                    nameof(modelo.SeleccionLocalId));
+
+                ModelState.Remove(
+                    nameof(modelo.SeleccionVisitanteId));
+
+                bool equiposAsignados =
+                    AsignarEquiposClasificados(
+                        modelo,
+                        partidosExistentes);
+
+                if (!equiposAsignados)
+                {
+                    ModelState.AddModelError(
+                        string.Empty,
+                        modelo.MensajeClasificacion ??
+                        "No se pudieron determinar los equipos clasificados.");
+                }
             }
 
             // Verifica que los equipos existan.
@@ -1170,6 +1199,161 @@ namespace FrontendAdministrativo.Controllers
                 "fue eliminado correctamente.";
 
             return RedirectToAction(nameof(Index));
+        }
+        private static bool AsignarEquiposClasificados(
+    PartidoFormViewModel modelo,
+    List<PartidoApiDto> partidos)
+        {
+            var origenes =
+                ObtenerPartidosDeOrigen(
+                    modelo.NumeroPartidoFifa);
+
+            if (origenes is null)
+            {
+                modelo.PuedeCrearPartido = true;
+                return true;
+            }
+
+            PartidoApiDto? partidoOrigen1 =
+                partidos.FirstOrDefault(partido =>
+                    partido.NumeroPartidoFifa ==
+                    origenes.Value.Partido1);
+
+            PartidoApiDto? partidoOrigen2 =
+                partidos.FirstOrDefault(partido =>
+                    partido.NumeroPartidoFifa ==
+                    origenes.Value.Partido2);
+
+            if (partidoOrigen1 is null ||
+                partidoOrigen2 is null)
+            {
+                modelo.PuedeCrearPartido = false;
+
+                modelo.MensajeClasificacion =
+                    $"Primero deben existir los partidos FIFA " +
+                    $"#{origenes.Value.Partido1} y " +
+                    $"#{origenes.Value.Partido2}.";
+
+                return false;
+            }
+
+            if (!PartidoTieneResultado(partidoOrigen1) ||
+                !PartidoTieneResultado(partidoOrigen2))
+            {
+                modelo.PuedeCrearPartido = false;
+
+                modelo.MensajeClasificacion =
+                    $"Primero deben registrarse los resultados de los " +
+                    $"partidos FIFA #{origenes.Value.Partido1} y " +
+                    $"#{origenes.Value.Partido2}.";
+
+                return false;
+            }
+
+            SeleccionApiDto? equipo1 =
+                ObtenerSeleccionPorResultado(
+                    partidoOrigen1,
+                    origenes.Value.UsarGanador1);
+
+            SeleccionApiDto? equipo2 =
+                ObtenerSeleccionPorResultado(
+                    partidoOrigen2,
+                    origenes.Value.UsarGanador2);
+
+            if (equipo1 is null || equipo2 is null)
+            {
+                modelo.PuedeCrearPartido = false;
+
+                modelo.MensajeClasificacion =
+                    "No se puede determinar el clasificado porque " +
+                    "uno de los partidos terminó empatado y la API " +
+                    "no indica el ganador por penales.";
+
+                return false;
+            }
+
+            modelo.SeleccionLocalId = equipo1.Id;
+            modelo.SeleccionVisitanteId = equipo2.Id;
+
+            modelo.SeleccionLocal = equipo1.Nombre;
+            modelo.SeleccionVisitante = equipo2.Nombre;
+
+            modelo.EquiposAsignadosAutomaticamente = true;
+            modelo.PuedeCrearPartido = true;
+
+            modelo.MensajeClasificacion =
+                $"Equipos asignados automáticamente según los " +
+                $"resultados de los partidos FIFA " +
+                $"#{origenes.Value.Partido1} y " +
+                $"#{origenes.Value.Partido2}.";
+
+            return true;
+        }
+
+        private static bool PartidoTieneResultado(
+            PartidoApiDto partido)
+        {
+            return string.Equals(
+                       partido.Estado,
+                       "FINALIZADO",
+                       StringComparison.OrdinalIgnoreCase) &&
+                   partido.GolesLocal.HasValue &&
+                   partido.GolesVisitante.HasValue;
+        }
+
+        private static SeleccionApiDto? ObtenerSeleccionPorResultado(
+            PartidoApiDto partido,
+            bool usarGanador)
+        {
+            if (!partido.GolesLocal.HasValue ||
+                !partido.GolesVisitante.HasValue)
+            {
+                return null;
+            }
+
+            if (partido.GolesLocal.Value ==
+                partido.GolesVisitante.Value)
+            {
+                return null;
+            }
+
+            bool ganoLocal =
+                partido.GolesLocal.Value >
+                partido.GolesVisitante.Value;
+
+            if (!usarGanador)
+            {
+                ganoLocal = !ganoLocal;
+            }
+
+            return ganoLocal
+                ? partido.SeleccionLocal
+                : partido.SeleccionVisitante;
+        }
+
+        private static (
+            int Partido1,
+            bool UsarGanador1,
+            int Partido2,
+            bool UsarGanador2)?
+            ObtenerPartidosDeOrigen(
+                int numeroPartidoFifa)
+        {
+            return numeroPartidoFifa switch
+            {
+                97 => (89, true, 90, true),
+                98 => (93, true, 94, true),
+                99 => (91, true, 92, true),
+                100 => (95, true, 96, true),
+
+                101 => (97, true, 98, true),
+                102 => (99, true, 100, true),
+
+                103 => (101, false, 102, false),
+                104 => (101, true, 102, true),
+
+                _ => null
+            };
         }
     }
 }

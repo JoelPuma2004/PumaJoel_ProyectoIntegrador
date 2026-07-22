@@ -81,6 +81,12 @@ namespace FrontendAdministrativo.Models.ViewModels
             ErrorMessage = "Ingrese una cuota válida.")]
         public decimal CuotaVisitante { get; set; } = 1.80m;
 
+        public bool EquiposAsignadosAutomaticamente { get; set; }
+
+        public bool PuedeCrearPartido { get; set; } = true;
+
+        public string? MensajeClasificacion { get; set; }
+
         public List<SeleccionApiDto> Selecciones { get; set; }
             = new();
 

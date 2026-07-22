@@ -20,9 +20,15 @@
     </a>
 </div>
 
-@if (Model.Selecciones.Count == 0 ||
-     Model.Sedes.Count == 0 ||
-     Model.Grupos.Count == 0)
+@{
+    bool faltanCatalogos =
+        Model.Selecciones.Count == 0 ||
+        Model.Sedes.Count == 0 ||
+        (Model.NumeroPartidoFifa <= 72 &&
+         Model.Grupos.Count == 0);
+}
+
+@if (faltanCatalogos)
 {
     <div class="alert alert-danger">
         No fue posible cargar todos los catálogos de la API.
@@ -129,63 +135,130 @@
 
             </div>
 
-            <div class="col-md-6">
+            @if (Model.NumeroPartidoFifa >= 97)
+            {
+                @if (!string.IsNullOrWhiteSpace(
+                        Model.MensajeClasificacion))
+                {
+                    <div class="col-12">
 
-                <label asp-for="SeleccionLocalId"
-                       class="form-label">
-                </label>
+                        <div class="alert @(Model.PuedeCrearPartido
+                                                        ? "alert-success"
+                                                        : "alert-warning")">
 
-                <select asp-for="SeleccionLocalId"
-                        class="form-select">
+                            @Model.MensajeClasificacion
 
-                    <option value="">
-                        Seleccione el Equipo 1
-                    </option>
+                        </div>
 
-                    @foreach (var seleccion in Model.Selecciones)
-                    {
-                        <option value="@seleccion.Id">
-                            @seleccion.Nombre
-                            (@seleccion.Grupo)
+                    </div>
+                }
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Equipo 1 clasificado
+                    </label>
+
+                    <input asp-for="SeleccionLocalId"
+                           type="hidden" />
+
+                    <input type="text"
+                           class="form-control"
+                           value="@(string.IsNullOrWhiteSpace(
+                                                    Model.SeleccionLocal)
+                                                    ? "Pendiente de clasificar"
+                                                    : Model.SeleccionLocal)"
+                           readonly />
+
+                    <span asp-validation-for="SeleccionLocalId"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <label class="form-label">
+                        Equipo 2 clasificado
+                    </label>
+
+                    <input asp-for="SeleccionVisitanteId"
+                           type="hidden" />
+
+                    <input type="text"
+                           class="form-control"
+                           value="@(string.IsNullOrWhiteSpace(
+                                                    Model.SeleccionVisitante)
+                                                    ? "Pendiente de clasificar"
+                                                    : Model.SeleccionVisitante)"
+                           readonly />
+
+                    <span asp-validation-for="SeleccionVisitanteId"
+                          class="text-danger">
+                    </span>
+
+                </div>
+            }
+            else
+            {
+                <div class="col-md-6">
+
+                    <label asp-for="SeleccionLocalId"
+                           class="form-label">
+                    </label>
+
+                    <select asp-for="SeleccionLocalId"
+                            class="form-select">
+
+                        <option value="">
+                            Seleccione el Equipo 1
                         </option>
-                    }
 
-                </select>
+                        @foreach (var seleccion in Model.Selecciones)
+                        {
+                            <option value="@seleccion.Id">
+                                @seleccion.Nombre
+                                (@seleccion.Grupo)
+                            </option>
+                        }
 
-                <span asp-validation-for="SeleccionLocalId"
-                      class="text-danger">
-                </span>
+                    </select>
 
-            </div>
+                    <span asp-validation-for="SeleccionLocalId"
+                          class="text-danger">
+                    </span>
 
-            <div class="col-md-6">
+                </div>
 
-                <label asp-for="SeleccionVisitanteId"
-                       class="form-label">
-                </label>
+                <div class="col-md-6">
 
-                <select asp-for="SeleccionVisitanteId"
-                        class="form-select">
+                    <label asp-for="SeleccionVisitanteId"
+                           class="form-label">
+                    </label>
 
-                    <option value="">
-                        Seleccione el Equipo 2
-                    </option>
+                    <select asp-for="SeleccionVisitanteId"
+                            class="form-select">
 
-                    @foreach (var seleccion in Model.Selecciones)
-                    {
-                        <option value="@seleccion.Id">
-                            @seleccion.Nombre
-                            (@seleccion.Grupo)
+                        <option value="">
+                            Seleccione el Equipo 2
                         </option>
-                    }
 
-                </select>
+                        @foreach (var seleccion in Model.Selecciones)
+                        {
+                            <option value="@seleccion.Id">
+                                @seleccion.Nombre
+                                (@seleccion.Grupo)
+                            </option>
+                        }
 
-                <span asp-validation-for="SeleccionVisitanteId"
-                      class="text-danger">
-                </span>
+                    </select>
 
-            </div>
+                    <span asp-validation-for="SeleccionVisitanteId"
+                          class="text-danger">
+                    </span>
+
+                </div>
+            }
 
             <div class="col-md-6">
 
@@ -296,9 +369,8 @@
                 Cancelar
             </a>
 
-            @if (Model.Selecciones.Count == 0 ||
-                 Model.Sedes.Count == 0 ||
-                 Model.Grupos.Count == 0)
+            @if (faltanCatalogos ||
+                 !Model.PuedeCrearPartido)
             {
                 <button type="button"
                         class="btn btn-primary"
@@ -325,7 +397,7 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
 
             const numeroInput =
                 document.getElementById("NumeroPartidoFifa");
