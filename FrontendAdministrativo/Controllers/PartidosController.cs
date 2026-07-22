@@ -8,6 +8,7 @@ using System.Globalization;
 
 
 
+
 namespace FrontendAdministrativo.Controllers
 {
     [Authorize(Roles = "ADMINISTRADOR")]
@@ -136,7 +137,7 @@ namespace FrontendAdministrativo.Controllers
             {
                 partidos = partidosApi
                     .Select(ConvertirPartidoApi)
-                    .OrderBy(partido => partido.FechaHora)
+                    .OrderBy(partido => partido.NumeroPartidoFifa)
                     .ToList();
 
                 ViewBag.UsandoDatosTemporales = false;
@@ -169,7 +170,7 @@ namespace FrontendAdministrativo.Controllers
                 }
 
                 partidos = consulta
-                    .OrderBy(partido => partido.FechaHora)
+                    .OrderBy(partido => partido.NumeroPartidoFifa)
                     .ToList();
 
                 ViewBag.UsandoDatosTemporales = true;
@@ -892,7 +893,8 @@ namespace FrontendAdministrativo.Controllers
             return new PartidoDto
             {
                 Id = partidoApi.Id,
-                NumeroPartidoFifa = partidoApi.Id,
+                NumeroPartidoFifa =
+        partidoApi.NumeroPartidoFifa,
 
                 SeleccionLocal =
                     partidoApi.SeleccionLocal?.Nombre
@@ -1122,6 +1124,52 @@ namespace FrontendAdministrativo.Controllers
             }
 
             return string.Empty;
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            PartidoApiDto? partido =
+                await _estadisticasApiService
+                    .ObtenerPartidoPorIdAsync(id);
+
+            if (partido is null)
+            {
+                TempData["MensajeError"] =
+                    "El partido no existe o ya fue eliminado.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!string.Equals(
+                    partido.Estado,
+                    "PROGRAMADO",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["MensajeError"] =
+                    $"El partido #{partido.NumeroPartidoFifa} " +
+                    "no puede eliminarse porque no está programado.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            (bool exito, string mensaje) =
+                await _estadisticasApiService
+                    .EliminarPartidoAsync(id);
+
+            if (!exito)
+            {
+                TempData["MensajeError"] =
+                    mensaje;
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["MensajeExito"] =
+                $"El partido #{partido.NumeroPartidoFifa} " +
+                "fue eliminado correctamente.";
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

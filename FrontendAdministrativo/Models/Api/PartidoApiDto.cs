@@ -4,6 +4,8 @@
     {
         public int Id { get; set; }
 
+        public int NumeroPartidoFifa { get; set; }
+
         public SeleccionApiDto? SeleccionLocal { get; set; }
 
         public SeleccionApiDto? SeleccionVisitante { get; set; }

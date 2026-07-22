@@ -358,7 +358,250 @@ namespace FrontendAdministrativo.Services
                 return false;
             }
         }
+        public async Task<List<UsuarioApiDto>?> ObtenerUsuariosAsync()
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.GetAsync("usuarios");
 
+                respuesta.EnsureSuccessStatusCode();
+
+                return await respuesta.Content
+                    .ReadFromJsonAsync<List<UsuarioApiDto>>()
+                    ?? new List<UsuarioApiDto>();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible consultar los usuarios.");
+
+                return null;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La consulta de usuarios tardó demasiado.");
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La respuesta de usuarios no tiene el formato esperado.");
+
+                return null;
+            }
+        }
+
+        public async Task<bool> CambiarEstadoUsuarioAsync(
+            int usuarioId,
+            bool activo)
+        {
+            try
+            {
+                var solicitud = new
+                {
+                    activo
+                };
+
+                using HttpResponseMessage respuesta =
+                    await _httpClient.PutAsJsonAsync(
+                        $"usuarios/{usuarioId}/estado",
+                        solicitud);
+
+                if (respuesta.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+
+                string contenido =
+                    await respuesta.Content.ReadAsStringAsync();
+
+                _logger.LogWarning(
+                    "No se pudo cambiar el estado del usuario {UsuarioId}. " +
+                    "Código: {Codigo}. Respuesta: {Respuesta}",
+                    usuarioId,
+                    respuesta.StatusCode,
+                    contenido);
+
+                return false;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible cambiar el estado del usuario {UsuarioId}.",
+                    usuarioId);
+
+                return false;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La actualización del usuario {UsuarioId} tardó demasiado.",
+                    usuarioId);
+
+                return false;
+            }
+        }
+
+        public async Task<bool> CambiarRolUsuarioAsync(
+            int usuarioId,
+            int rolId)
+        {
+            try
+            {
+                var solicitud = new
+                {
+                    rolId
+                };
+
+                using HttpResponseMessage respuesta =
+                    await _httpClient.PutAsJsonAsync(
+                        $"usuarios/{usuarioId}/rol",
+                        solicitud);
+
+                if (respuesta.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+
+                string contenido =
+                    await respuesta.Content.ReadAsStringAsync();
+
+                _logger.LogWarning(
+                    "No se pudo cambiar el rol del usuario {UsuarioId}. " +
+                    "Código: {Codigo}. Respuesta: {Respuesta}",
+                    usuarioId,
+                    respuesta.StatusCode,
+                    contenido);
+
+                return false;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible cambiar el rol del usuario {UsuarioId}.",
+                    usuarioId);
+
+                return false;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La actualización del rol del usuario {UsuarioId} " +
+                    "tardó demasiado.",
+                    usuarioId);
+
+                return false;
+            }
+        }
+        public async Task<List<AuditoriaApiDto>?> ObtenerAuditoriaAsync()
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.GetAsync("auditoria");
+
+                respuesta.EnsureSuccessStatusCode();
+
+                return await respuesta.Content
+                    .ReadFromJsonAsync<List<AuditoriaApiDto>>()
+                    ?? new List<AuditoriaApiDto>();
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible consultar la auditoría.");
+
+                return null;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La consulta de auditoría tardó demasiado.");
+
+                return null;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La respuesta de auditoría no tiene el formato esperado.");
+
+                return null;
+            }
+        }
+        public async Task<(bool Exito, string Mensaje)>
+    EliminarPartidoAsync(int partidoId)
+        {
+            try
+            {
+                using HttpResponseMessage respuesta =
+                    await _httpClient.DeleteAsync(
+                        $"partidos/{partidoId}");
+
+                if (respuesta.IsSuccessStatusCode)
+                {
+                    return (
+                        true,
+                        "El partido fue eliminado correctamente."
+                    );
+                }
+
+                string contenido =
+                    await respuesta.Content.ReadAsStringAsync();
+
+                _logger.LogWarning(
+                    "No se pudo eliminar el partido {PartidoId}. " +
+                    "Código: {Codigo}. Respuesta: {Respuesta}",
+                    partidoId,
+                    respuesta.StatusCode,
+                    contenido);
+
+                string mensaje =
+                    string.IsNullOrWhiteSpace(contenido)
+                        ? "La API no permitió eliminar el partido."
+                        : contenido;
+
+                return (false, mensaje);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "No fue posible conectarse para eliminar " +
+                    "el partido {PartidoId}.",
+                    partidoId);
+
+                return (
+                    false,
+                    "No fue posible conectarse con el Servicio de Estadísticas."
+                );
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "La eliminación del partido {PartidoId} " +
+                    "tardó demasiado.",
+                    partidoId);
+
+                return (
+                    false,
+                    "La API tardó demasiado en responder."
+                );
+            }
+        }
         public async Task<bool> EstaDisponibleAsync()
         {
             try

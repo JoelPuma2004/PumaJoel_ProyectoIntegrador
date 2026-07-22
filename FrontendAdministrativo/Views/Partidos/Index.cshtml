@@ -354,27 +354,51 @@ else
                                 </span>
                             }
 
-                        </td>
+                            <td class="text-end">
 
-                        <td class="text-end">
-
-                            <a asp-controller="Partidos"
-                               asp-action="Detalles"
-                               asp-route-id="@partido.Id"
-                               class="btn btn-sm btn-outline-primary">
-                                Ver
-                            </a>
-                            @if (partido.Estado != "FINALIZADO")
-                            {
                                 <a asp-controller="Partidos"
-                                   asp-action="RegistrarResultado"
+                                   asp-action="Detalles"
                                    asp-route-id="@partido.Id"
-                                   class="btn btn-sm btn-success">
-                                    Resultado
+                                   class="btn btn-sm btn-outline-primary">
+                                    Ver
                                 </a>
-                            }
 
-                        </td>
+                                @if (!string.Equals(
+                                        partido.Estado,
+                                        "FINALIZADO",
+                                        StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <a asp-controller="Partidos"
+                                       asp-action="RegistrarResultado"
+                                       asp-route-id="@partido.Id"
+                                       class="btn btn-sm btn-success">
+                                        Resultado
+                                    </a>
+                                }
+
+                                @if (string.Equals(
+                                        partido.Estado,
+                                        "PROGRAMADO",
+                                        StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <form asp-controller="Partidos"
+                                          asp-action="Eliminar"
+                                          asp-route-id="@partido.Id"
+                                          method="post"
+                                          class="d-inline"
+                                          onsubmit="return confirm('¿Está seguro de eliminar el partido #@partido.NumeroPartidoFifa? Esta acción solo funcionará si no tiene resultados ni información relacionada.');">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger">
+                                            Eliminar
+                                        </button>
+
+                                    </form>
+                                }
+
+                            </td>
 
                     </tr>
                 }

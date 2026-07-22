@@ -78,10 +78,17 @@
     </p>
 </div>
 
-<div class="alert alert-warning">
-    Los registros mostrados son temporales porque todavía no existe
-    un endpoint real de auditoría en el backend.
-</div>
+@if (TempData["MensajeError"] is string mensajeError)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @mensajeError
+
+        <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+        </button>
+    </div>
+}
 
 <div class="row g-3 mb-4">
 
@@ -239,7 +246,7 @@
                         <th>Módulo</th>
                         <th>Acción</th>
                         <th>Descripción</th>
-                        <th>Dirección IP</th>
+                      
                     </tr>
                 </thead>
 
@@ -274,11 +281,7 @@
                                 @registro.Descripcion
                             </td>
 
-                            <td>
-                                <code>
-                                    @registro.DireccionIp
-                                </code>
-                            </td>
+                           
 
                         </tr>
                     }
