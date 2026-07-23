@@ -29,6 +29,17 @@ ApiUTNGolCoin__BaseUrl=http://localhost:5001/api/ \
 make run
 ```
 
+En la red del equipo, Joel solo cambia las dos IP:
+
+```bash
+ApiEstadisticas__BaseUrl=http://IP_DE_ANDREA:18080/demo/api/v1/ \
+ApiUTNGolCoin__BaseUrl=http://IP_DE_MAYRA:5001/api/ \
+make run
+```
+
+El panel escucha en `0.0.0.0:5203`, accesible como
+`http://IP_DE_JOEL:5203`.
+
 Las credenciales locales de demostración son
 `admin@utn.edu.ec` / `Admin123!`. También admiten variables de entorno:
 
