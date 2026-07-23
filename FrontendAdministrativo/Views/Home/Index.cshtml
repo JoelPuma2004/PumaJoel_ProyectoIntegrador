@@ -31,8 +31,7 @@
 {
     <div class="alert alert-warning">
         No fue posible conectarse con el Servicio de Estadísticas.
-        Los contadores de selecciones y partidos aparecerán cuando Andrea
-        encienda nuevamente la API.
+        Los contadores aparecerán cuando responda la API local.
     </div>
 }
 
@@ -65,8 +64,16 @@
     <div class="col-xl-3 col-md-6">
         <div class="dashboard-card red">
             <h3>Usuarios</h3>
-            <div class="number">@Model.TotalUsuarios</div>
-            <p>Dato temporal</p>
+            <div class="number">
+                @(Model.UsuariosDisponibles
+                    ? Model.TotalUsuarios.ToString()
+                    : "N/D")
+            </div>
+            <p>
+                @(Model.UsuariosDisponibles
+                    ? "Usuarios obtenidos de la API"
+                    : "Información no disponible")
+            </p>
         </div>
     </div>
 
@@ -180,7 +187,7 @@
                 {
                     <span>
                         El Servicio de Estadísticas aparecerá disponible
-                        cuando Andrea encienda WildFly y ngrok.
+                        cuando responda la API local configurada.
                     </span>
                 }
             </div>

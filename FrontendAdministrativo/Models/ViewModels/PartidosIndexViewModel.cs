@@ -2,6 +2,8 @@
 {
     public class PartidosIndexViewModel
     {
+        public bool ApiDisponible { get; set; }
+
         public List<PartidoDto> Partidos { get; set; } = new();
 
         public string GrupoSeleccionado { get; set; } = string.Empty;

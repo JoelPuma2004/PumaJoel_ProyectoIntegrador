@@ -1,4 +1,6 @@
-﻿using FrontendAdministrativo.Models.ViewModels;
+﻿using FrontendAdministrativo.Models.Api;
+using FrontendAdministrativo.Models.ViewModels;
+using FrontendAdministrativo.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,96 +9,44 @@ namespace FrontendAdministrativo.Controllers
     [Authorize(Roles = "ADMINISTRADOR")]
     public class UsuariosController : Controller
     {
-        // Datos temporales hasta conectar la API de usuarios.
-        private static readonly List<UsuarioAdminViewModel>
-            UsuariosTemporales = new()
-            {
-                new UsuarioAdminViewModel
-                {
-                    Id = 1,
-                    NombreCompleto = "Administrador UTN",
-                    Correo = "admin@utn.edu.ec",
-                    Rol = "ADMINISTRADOR",
-                    Activo = true,
-                    FechaRegistro =
-                        new DateTime(2026, 6, 1, 8, 30, 0),
-                    UltimoAcceso = DateTime.Now
-                },
+        private readonly EstadisticasApiService
+            _estadisticasApiService;
 
-                new UsuarioAdminViewModel
-                {
-                    Id = 2,
-                    NombreCompleto = "Andrea Guacales",
-                    Correo = "andrea@utn.edu.ec",
-                    Rol = "ADMINISTRADOR",
-                    Activo = true,
-                    FechaRegistro =
-                        new DateTime(2026, 6, 5, 10, 0, 0),
-                    UltimoAcceso =
-                        DateTime.Now.AddHours(-2)
-                },
-
-                new UsuarioAdminViewModel
-                {
-                    Id = 3,
-                    NombreCompleto = "Carlos Andrade",
-                    Correo = "carlos@utn.edu.ec",
-                    Rol = "USUARIO",
-                    Activo = true,
-                    FechaRegistro =
-                        new DateTime(2026, 6, 10, 14, 15, 0),
-                    UltimoAcceso =
-                        DateTime.Now.AddDays(-1)
-                },
-
-                new UsuarioAdminViewModel
-                {
-                    Id = 4,
-                    NombreCompleto = "María López",
-                    Correo = "maria@utn.edu.ec",
-                    Rol = "USUARIO",
-                    Activo = true,
-                    FechaRegistro =
-                        new DateTime(2026, 6, 12, 9, 40, 0),
-                    UltimoAcceso =
-                        DateTime.Now.AddHours(-5)
-                },
-
-                new UsuarioAdminViewModel
-                {
-                    Id = 5,
-                    NombreCompleto = "Pedro Torres",
-                    Correo = "pedro@utn.edu.ec",
-                    Rol = "USUARIO",
-                    Activo = false,
-                    FechaRegistro =
-                        new DateTime(2026, 6, 15, 16, 20, 0),
-                    UltimoAcceso =
-                        DateTime.Now.AddDays(-8)
-                },
-
-                new UsuarioAdminViewModel
-                {
-                    Id = 6,
-                    NombreCompleto = "Lucía Morales",
-                    Correo = "lucia@utn.edu.ec",
-                    Rol = "USUARIO",
-                    Activo = true,
-                    FechaRegistro =
-                        new DateTime(2026, 6, 18, 11, 10, 0),
-                    UltimoAcceso =
-                        DateTime.Now.AddDays(-2)
-                }
-            };
+        public UsuariosController(
+            EstadisticasApiService estadisticasApiService)
+        {
+            _estadisticasApiService =
+                estadisticasApiService;
+        }
 
         [HttpGet]
-        public IActionResult Index(
+        public async Task<IActionResult> Index(
             string? buscar,
             string? rol,
             string? estado)
         {
+            List<UsuarioApiDto>? respuestaApi =
+                await _estadisticasApiService
+                    .ObtenerUsuariosAsync();
+
+            if (respuestaApi is null)
+            {
+                return View(new UsuariosIndexViewModel
+                {
+                    ApiDisponible = false,
+                    Buscar = buscar,
+                    RolSeleccionado = rol,
+                    EstadoSeleccionado = estado
+                });
+            }
+
+            List<UsuarioAdminViewModel> todosLosUsuarios =
+                respuestaApi
+                    .Select(ConvertirUsuario)
+                    .ToList();
+
             IEnumerable<UsuarioAdminViewModel> consulta =
-                UsuariosTemporales;
+                todosLosUsuarios;
 
             if (!string.IsNullOrWhiteSpace(buscar))
             {
@@ -132,25 +82,30 @@ namespace FrontendAdministrativo.Controllers
 
             List<UsuarioAdminViewModel> usuariosFiltrados =
                 consulta
-                    .OrderBy(usuario => usuario.NombreCompleto)
+                    .OrderBy(usuario =>
+                        usuario.NombreCompleto)
                     .ToList();
 
             var modelo = new UsuariosIndexViewModel
             {
+                ApiDisponible = true,
                 Usuarios = usuariosFiltrados,
+
                 Buscar = buscar,
+
                 RolSeleccionado = rol,
+
                 EstadoSeleccionado = estado,
 
                 TotalUsuarios =
-                    UsuariosTemporales.Count,
+                    todosLosUsuarios.Count,
 
                 UsuariosActivos =
-                    UsuariosTemporales.Count(usuario =>
+                    todosLosUsuarios.Count(usuario =>
                         usuario.Activo),
 
                 Administradores =
-                    UsuariosTemporales.Count(usuario =>
+                    todosLosUsuarios.Count(usuario =>
                         usuario.Rol == "ADMINISTRADOR")
             };
 
@@ -158,24 +113,42 @@ namespace FrontendAdministrativo.Controllers
         }
 
         [HttpGet]
-        public IActionResult Editar(int id)
+        public async Task<IActionResult> Editar(int id)
         {
-            UsuarioAdminViewModel? usuario =
-                UsuariosTemporales.FirstOrDefault(
-                    usuario => usuario.Id == id);
+            List<UsuarioApiDto>? usuarios =
+                await _estadisticasApiService
+                    .ObtenerUsuariosAsync();
 
-            if (usuario is null)
+            UsuarioApiDto? usuarioApi =
+                usuarios?.FirstOrDefault(usuario =>
+                    usuario.Id == id);
+
+            if (usuarioApi is null)
             {
-                return NotFound();
+                TempData["MensajeError"] =
+                    "No fue posible consultar el usuario en la API.";
+
+                return RedirectToAction(nameof(Index));
             }
+
+            UsuarioAdminViewModel usuario =
+                ConvertirUsuario(usuarioApi);
 
             var modelo = new EditarUsuarioViewModel
             {
                 Id = usuario.Id,
-                NombreCompleto = usuario.NombreCompleto,
-                Correo = usuario.Correo,
-                Rol = usuario.Rol,
-                Activo = usuario.Activo
+
+                NombreCompleto =
+                    usuario.NombreCompleto,
+
+                Correo =
+                    usuario.Correo,
+
+                Rol =
+                    usuario.Rol,
+
+                Activo =
+                    usuario.Activo
             };
 
             return View(modelo);
@@ -183,16 +156,20 @@ namespace FrontendAdministrativo.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Editar(
+        public async Task<IActionResult> Editar(
             EditarUsuarioViewModel modelo)
         {
-            UsuarioAdminViewModel? usuario =
-                UsuariosTemporales.FirstOrDefault(
-                    usuario => usuario.Id == modelo.Id);
+            modelo.Rol =
+                modelo.Rol
+                    .Trim()
+                    .ToUpperInvariant();
 
-            if (usuario is null)
+            if (modelo.Rol != "ADMINISTRADOR" &&
+                modelo.Rol != "USUARIO")
             {
-                return NotFound();
+                ModelState.AddModelError(
+                    nameof(modelo.Rol),
+                    "El rol seleccionado no es válido.");
             }
 
             if (!ModelState.IsValid)
@@ -200,14 +177,62 @@ namespace FrontendAdministrativo.Controllers
                 return View(modelo);
             }
 
-            usuario.Rol =
-                modelo.Rol.Trim().ToUpperInvariant();
+            List<UsuarioApiDto>? usuarios =
+                await _estadisticasApiService
+                    .ObtenerUsuariosAsync();
 
-            usuario.Activo =
-                modelo.Activo;
+            UsuarioApiDto? usuarioActual =
+                usuarios?.FirstOrDefault(usuario =>
+                    usuario.Id == modelo.Id);
+
+            if (usuarioActual is null)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No fue posible consultar el usuario en la API.");
+
+                return View(modelo);
+            }
+
+            int nuevoRolId =
+                modelo.Rol == "ADMINISTRADOR"
+                    ? 1
+                    : 2;
+
+            bool rolActualizado = true;
+            bool estadoActualizado = true;
+
+            if (usuarioActual.Rol?.Id != nuevoRolId)
+            {
+                rolActualizado =
+                    await _estadisticasApiService
+                        .CambiarRolUsuarioAsync(
+                            modelo.Id,
+                            nuevoRolId);
+            }
+
+            if (usuarioActual.Activo != modelo.Activo)
+            {
+                estadoActualizado =
+                    await _estadisticasApiService
+                        .CambiarEstadoUsuarioAsync(
+                            modelo.Id,
+                            modelo.Activo);
+            }
+
+            if (!rolActualizado ||
+                !estadoActualizado)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No fue posible guardar todos los cambios. " +
+                    "Revise que el servicio esté disponible.");
+
+                return View(modelo);
+            }
 
             TempData["MensajeExito"] =
-                $"El usuario {usuario.NombreCompleto} " +
+                $"El usuario {modelo.NombreCompleto} " +
                 "fue actualizado correctamente.";
 
             return RedirectToAction(nameof(Index));
@@ -215,25 +240,174 @@ namespace FrontendAdministrativo.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CambiarEstado(int id)
+        public async Task<IActionResult> CambiarEstado(
+            int id)
         {
-            UsuarioAdminViewModel? usuario =
-                UsuariosTemporales.FirstOrDefault(
-                    usuario => usuario.Id == id);
+            List<UsuarioApiDto>? usuarios =
+                await _estadisticasApiService
+                    .ObtenerUsuariosAsync();
 
-            if (usuario is null)
+            UsuarioApiDto? usuarioApi =
+                usuarios?.FirstOrDefault(usuario =>
+                    usuario.Id == id);
+
+            if (usuarioApi is null)
             {
-                return NotFound();
+                TempData["MensajeError"] =
+                    "No fue posible consultar el usuario en la API. " +
+                    "No se realizó ningún cambio.";
+
+                return RedirectToAction(nameof(Index));
             }
 
-            usuario.Activo = !usuario.Activo;
+            bool nuevoEstado =
+                !usuarioApi.Activo;
+
+            bool actualizado =
+                await _estadisticasApiService
+                    .CambiarEstadoUsuarioAsync(
+                        id,
+                        nuevoEstado);
+
+            if (!actualizado)
+            {
+                TempData["MensajeError"] =
+                    "No fue posible cambiar el estado del usuario.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            string nombre =
+                ObtenerNombreVisible(usuarioApi);
 
             TempData["MensajeExito"] =
-                usuario.Activo
-                    ? $"El usuario {usuario.NombreCompleto} fue activado."
-                    : $"El usuario {usuario.NombreCompleto} fue desactivado.";
+                nuevoEstado
+                    ? $"El usuario {nombre} fue activado."
+                    : $"El usuario {nombre} fue desactivado.";
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private static UsuarioAdminViewModel ConvertirUsuario(
+            UsuarioApiDto usuarioApi)
+        {
+            return new UsuarioAdminViewModel
+            {
+                Id =
+                    usuarioApi.Id,
+
+                NombreCompleto =
+                    ObtenerNombreVisible(usuarioApi),
+
+                Correo =
+                    ObtenerCorreoVisible(usuarioApi),
+
+                Rol =
+                    usuarioApi.Rol?.Nombre?
+                        .Trim()
+                        .ToUpperInvariant()
+                    ?? "USUARIO",
+
+                Activo =
+                    usuarioApi.Activo,
+
+                FechaRegistro =
+                    ConvertirFecha(
+                        usuarioApi.FechaCreacion),
+
+                // Andrea no devuelve último acceso.
+                UltimoAcceso =
+                    null
+            };
+        }
+
+        private static string ObtenerNombreVisible(
+            UsuarioApiDto usuario)
+        {
+            if (!string.IsNullOrWhiteSpace(usuario.Nombre))
+            {
+                return usuario.Nombre.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(usuario.Username))
+            {
+                return usuario.Username.Trim();
+            }
+
+            return $"Usuario {usuario.Id}";
+        }
+
+        private static string ObtenerCorreoVisible(
+            UsuarioApiDto usuario)
+        {
+            if (!string.IsNullOrWhiteSpace(usuario.Email))
+            {
+                return usuario.Email.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(usuario.Username) &&
+                usuario.Username.Contains('@'))
+            {
+                return usuario.Username.Trim();
+            }
+
+            return "No registrado";
+        }
+
+        private static DateTime ConvertirFecha(
+            List<int>? valores)
+        {
+            if (valores is null ||
+                valores.Count < 3)
+            {
+                return DateTime.MinValue;
+            }
+
+            try
+            {
+                int anio =
+                    valores[0];
+
+                int mes =
+                    valores[1];
+
+                int dia =
+                    valores[2];
+
+                int hora =
+                    valores.Count > 3
+                        ? valores[3]
+                        : 0;
+
+                int minuto =
+                    valores.Count > 4
+                        ? valores[4]
+                        : 0;
+
+                int segundo =
+                    valores.Count > 5
+                        ? valores[5]
+                        : 0;
+
+                int milisegundo =
+                    valores.Count > 6
+                        ? valores[6] / 1_000_000
+                        : 0;
+
+                return new DateTime(
+                    anio,
+                    mes,
+                    dia,
+                    hora,
+                    minuto,
+                    segundo,
+                    milisegundo,
+                    DateTimeKind.Unspecified);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return DateTime.MinValue;
+            }
         }
     }
 }

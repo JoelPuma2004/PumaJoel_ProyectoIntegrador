@@ -7,7 +7,10 @@
 <div class="page-header">
     <div>
         <h2>Nuevo partido</h2>
-        <p>Registre un nuevo partido en el calendario del torneo.</p>
+
+        <p>
+            Registre un partido real en el Servicio de Estadísticas.
+        </p>
     </div>
 
     <a asp-controller="Partidos"
@@ -15,6 +18,25 @@
        class="btn btn-outline-secondary">
         Volver
     </a>
+</div>
+
+@{
+    bool faltanCatalogos =
+        !Model.CatalogosDisponibles;
+}
+
+@if (faltanCatalogos)
+{
+    <div class="alert alert-danger">
+        No fue posible cargar selecciones y sedes desde la API.
+        La creación permanece deshabilitada y no se usarán datos de respaldo.
+    </div>
+}
+
+<div class="alert alert-info">
+    Equipo 1 y Equipo 2 indican el orden en el marcador.
+    No significan que uno de los equipos juegue realmente
+    como local o visitante.
 </div>
 
 <div class="panel-card">
@@ -32,119 +54,144 @@
         <div class="row g-3">
 
             <div class="col-md-4">
+
                 <label asp-for="NumeroPartidoFifa"
                        class="form-label">
                 </label>
 
                 <input asp-for="NumeroPartidoFifa"
-                       class="form-control" />
+                       class="form-control"
+                       type="number"
+                       min="89"
+                       max="104"
+                       readonly />
+
+                <small class="text-muted">
+                    Se asigna el siguiente número libre desde octavos hasta la final (89 a 104).
+                </small>
 
                 <span asp-validation-for="NumeroPartidoFifa"
                       class="text-danger">
                 </span>
+
             </div>
 
             <div class="col-md-4">
-                <label asp-for="Fase"
-                       class="form-label">
+
+                <label class="form-label">
+                    Fase
                 </label>
 
-                <select asp-for="Fase"
-                        class="form-select">
+                <input asp-for="Fase"
+                       type="hidden" />
 
-                    <option value="Fase de grupos">
-                        Fase de grupos
-                    </option>
+                <input id="FaseTexto"
+                       class="form-control"
+                       type="text"
+                       readonly />
 
-                    <option value="Dieciseisavos de final">
-                        Dieciseisavos de final
-                    </option>
-
-                    <option value="Octavos de final">
-                        Octavos de final
-                    </option>
-
-                    <option value="Cuartos de final">
-                        Cuartos de final
-                    </option>
-
-                    <option value="Semifinal">
-                        Semifinal
-                    </option>
-
-                    <option value="Tercer puesto">
-                        Tercer puesto
-                    </option>
-
-                    <option value="Final">
-                        Final
-                    </option>
-
-                </select>
+                <small class="text-muted">
+                    La fase se calcula automáticamente según el número FIFA.
+                </small>
 
                 <span asp-validation-for="Fase"
                       class="text-danger">
                 </span>
+
             </div>
 
             <div class="col-md-4">
-                <label asp-for="Grupo"
+
+                <label asp-for="GrupoId"
                        class="form-label">
                 </label>
 
-                <select asp-for="Grupo"
+                <select asp-for="GrupoId"
                         class="form-select">
 
-                    <option value="">No aplica</option>
-                    <option value="A">Grupo A</option>
-                    <option value="B">Grupo B</option>
-                    <option value="C">Grupo C</option>
-                    <option value="D">Grupo D</option>
-                    <option value="E">Grupo E</option>
-                    <option value="F">Grupo F</option>
-                    <option value="G">Grupo G</option>
-                    <option value="H">Grupo H</option>
-                    <option value="I">Grupo I</option>
-                    <option value="J">Grupo J</option>
-                    <option value="K">Grupo K</option>
-                    <option value="L">Grupo L</option>
+                    <option value="">
+                        No aplica
+                    </option>
+
+                    @foreach (var grupo in Model.Grupos)
+                    {
+                        <option value="@grupo.Id">
+                            @grupo.Nombre
+                        </option>
+                    }
 
                 </select>
 
-                <span asp-validation-for="Grupo"
+                <small id="GrupoAyuda"
+                       class="text-muted">
+                </small>
+
+                <span asp-validation-for="GrupoId"
                       class="text-danger">
                 </span>
+
             </div>
 
             <div class="col-md-6">
-                <label asp-for="SeleccionLocal"
+
+                <label asp-for="SeleccionLocalId"
                        class="form-label">
                 </label>
 
-                <input asp-for="SeleccionLocal"
-                       class="form-control"
-                       placeholder="Ejemplo: Francia" />
+                <select asp-for="SeleccionLocalId"
+                        class="form-select">
 
-                <span asp-validation-for="SeleccionLocal"
+                    <option value="">
+                        Seleccione el Equipo 1
+                    </option>
+
+                    @foreach (var seleccion in Model.Selecciones)
+                    {
+                        <option value="@seleccion.Id">
+                            @seleccion.Nombre
+                            (@seleccion.Grupo)
+                        </option>
+                    }
+
+                </select>
+
+                <span asp-validation-for="SeleccionLocalId"
                       class="text-danger">
                 </span>
+
             </div>
 
             <div class="col-md-6">
-                <label asp-for="SeleccionVisitante"
+
+                <label asp-for="SeleccionVisitanteId"
                        class="form-label">
                 </label>
 
-                <input asp-for="SeleccionVisitante"
-                       class="form-control"
-                       placeholder="Ejemplo: España" />
+                <select asp-for="SeleccionVisitanteId"
+                        class="form-select">
 
-                <span asp-validation-for="SeleccionVisitante"
+                    <option value="">
+                        Seleccione el Equipo 2
+                    </option>
+
+                    @foreach (var seleccion in Model.Selecciones)
+                    {
+                        <option value="@seleccion.Id">
+                            @seleccion.Nombre
+                            (@seleccion.Grupo)
+                        </option>
+                    }
+
+                </select>
+
+                <span asp-validation-for="SeleccionVisitanteId"
                       class="text-danger">
                 </span>
+
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-6">
+
                 <label asp-for="FechaHora"
                        class="form-label">
                 </label>
@@ -157,47 +204,89 @@
                 <span asp-validation-for="FechaHora"
                       class="text-danger">
                 </span>
+
             </div>
 
-            <div class="col-md-5">
-                <label asp-for="Sede"
+            <div class="col-md-6">
+
+                <label asp-for="SedeId"
                        class="form-label">
                 </label>
 
-                <input asp-for="Sede"
-                       class="form-control"
-                       placeholder="Nombre del estadio" />
-
-                <span asp-validation-for="Sede"
-                      class="text-danger">
-                </span>
-            </div>
-
-            <div class="col-md-3">
-                <label asp-for="Estado"
-                       class="form-label">
-                </label>
-
-                <select asp-for="Estado"
+                <select asp-for="SedeId"
                         class="form-select">
 
-                    <option value="PROGRAMADO">
-                        Programado
+                    <option value="">
+                        Seleccione una sede
                     </option>
 
-                    <option value="EN JUEGO">
-                        En juego
-                    </option>
-
-                    <option value="FINALIZADO">
-                        Finalizado
-                    </option>
+                    @foreach (var sede in Model.Sedes)
+                    {
+                        <option value="@sede.Id">
+                            @sede.Nombre - @sede.Ciudad
+                        </option>
+                    }
 
                 </select>
 
-                <span asp-validation-for="Estado"
+                <span asp-validation-for="SedeId"
                       class="text-danger">
                 </span>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <label asp-for="CuotaLocal"
+                       class="form-label">
+                </label>
+
+                <input asp-for="CuotaLocal"
+                       class="form-control"
+                       type="number"
+                       min="1"
+                       step="0.01" />
+
+                <span asp-validation-for="CuotaLocal"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <label asp-for="CuotaEmpate"
+                       class="form-label">
+                </label>
+
+                <input asp-for="CuotaEmpate"
+                       class="form-control"
+                       type="number"
+                       min="1"
+                       step="0.01" />
+
+                <span asp-validation-for="CuotaEmpate"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <label asp-for="CuotaVisitante"
+                       class="form-label">
+                </label>
+
+                <input asp-for="CuotaVisitante"
+                       class="form-control"
+                       type="number"
+                       min="1"
+                       step="0.01" />
+
+                <span asp-validation-for="CuotaVisitante"
+                      class="text-danger">
+                </span>
+
             </div>
 
         </div>
@@ -210,10 +299,22 @@
                 Cancelar
             </a>
 
-            <button type="submit"
-                    class="btn btn-primary">
-                Guardar partido
-            </button>
+            @if (faltanCatalogos ||
+                 !Model.PuedeCrearPartido)
+            {
+                <button type="button"
+                        class="btn btn-primary"
+                        disabled>
+                    Guardar partido real
+                </button>
+            }
+            else
+            {
+                <button type="submit"
+                        class="btn btn-primary">
+                    Guardar partido real
+                </button>
+            }
 
         </div>
 
@@ -222,5 +323,94 @@
 </div>
 
 @section Scripts {
+
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const numeroInput =
+                document.getElementById("NumeroPartidoFifa");
+
+            const faseInput =
+                document.getElementById("Fase");
+
+            const faseTexto =
+                document.getElementById("FaseTexto");
+
+            const grupoSelect =
+                document.getElementById("GrupoId");
+
+            const grupoAyuda =
+                document.getElementById("GrupoAyuda");
+
+            function obtenerFase(numero) {
+                if (numero >= 89 && numero <= 96) {
+                    return {
+                        codigo: "OCTAVOS",
+                        texto: "Octavos de final"
+                    };
+                }
+
+                if (numero >= 97 && numero <= 100) {
+                    return {
+                        codigo: "CUARTOS",
+                        texto: "Cuartos de final"
+                    };
+                }
+
+                if (numero >= 101 && numero <= 102) {
+                    return {
+                        codigo: "SEMIFINAL",
+                        texto: "Semifinal"
+                    };
+                }
+
+                if (numero === 103) {
+                    return {
+                        codigo: "TERCER_PUESTO",
+                        texto: "Tercer puesto"
+                    };
+                }
+
+                if (numero === 104) {
+                    return {
+                        codigo: "FINAL",
+                        texto: "Final"
+                    };
+                }
+
+                return {
+                    codigo: "",
+                    texto: "Número no válido"
+                };
+            }
+
+            function actualizarFormulario() {
+
+                const numero =
+                    Number(numeroInput.value);
+
+                const fase =
+                    obtenerFase(numero);
+
+                faseInput.value =
+                    fase.codigo;
+
+                faseTexto.value =
+                    fase.texto;
+
+                grupoSelect.value = "";
+                grupoSelect.disabled = true;
+                grupoAyuda.textContent =
+                    "No aplica en fases eliminatorias.";
+            }
+
+            numeroInput.addEventListener(
+                "input",
+                actualizarFormulario);
+
+            actualizarFormulario();
+        });
+    </script>
 }

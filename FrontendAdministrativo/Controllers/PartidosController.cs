@@ -8,6 +8,7 @@ using System.Globalization;
 
 
 
+
 namespace FrontendAdministrativo.Controllers
 {
     [Authorize(Roles = "ADMINISTRADOR")]
@@ -20,94 +21,6 @@ namespace FrontendAdministrativo.Controllers
         {
             _estadisticasApiService = estadisticasApiService;
         }
-
-        // Datos de respaldo cuando la API no está disponible.
-        private static readonly List<PartidoDto> PartidosTemporales = new()
-        {
-            new PartidoDto
-            {
-                Id = 1,
-                NumeroPartidoFifa = 1,
-                Fase = "Fase de grupos",
-                Grupo = "A",
-                SeleccionLocal = "México",
-                SeleccionVisitante = "Sudáfrica",
-                FechaHora = new DateTime(2026, 6, 11, 14, 0, 0),
-                Sede = "Estadio Azteca",
-                Estado = "PROGRAMADO"
-            },
-
-            new PartidoDto
-            {
-                Id = 2,
-                NumeroPartidoFifa = 2,
-                Fase = "Fase de grupos",
-                Grupo = "A",
-                SeleccionLocal = "Corea del Sur",
-                SeleccionVisitante = "República Checa",
-                FechaHora = new DateTime(2026, 6, 11, 19, 0, 0),
-                Sede = "Estadio Akron",
-                Estado = "PROGRAMADO"
-            },
-
-            new PartidoDto
-            {
-                Id = 3,
-                NumeroPartidoFifa = 3,
-                Fase = "Fase de grupos",
-                Grupo = "B",
-                SeleccionLocal = "Canadá",
-                SeleccionVisitante = "Suiza",
-                FechaHora = new DateTime(2026, 6, 12, 16, 0, 0),
-                Sede = "BMO Field",
-                Estado = "EN JUEGO",
-                GolesLocal = 1,
-                GolesVisitante = 0
-            },
-
-            new PartidoDto
-            {
-                Id = 4,
-                NumeroPartidoFifa = 4,
-                Fase = "Fase de grupos",
-                Grupo = "B",
-                SeleccionLocal = "Qatar",
-                SeleccionVisitante = "Bosnia y Herzegovina",
-                FechaHora = new DateTime(2026, 6, 12, 20, 0, 0),
-                Sede = "BC Place",
-                Estado = "PROGRAMADO"
-            },
-
-            new PartidoDto
-            {
-                Id = 5,
-                NumeroPartidoFifa = 5,
-                Fase = "Fase de grupos",
-                Grupo = "C",
-                SeleccionLocal = "Brasil",
-                SeleccionVisitante = "Marruecos",
-                FechaHora = new DateTime(2026, 6, 13, 15, 0, 0),
-                Sede = "MetLife Stadium",
-                Estado = "FINALIZADO",
-                GolesLocal = 2,
-                GolesVisitante = 1
-            },
-
-            new PartidoDto
-            {
-                Id = 6,
-                NumeroPartidoFifa = 6,
-                Fase = "Fase de grupos",
-                Grupo = "C",
-                SeleccionLocal = "Haití",
-                SeleccionVisitante = "Escocia",
-                FechaHora = new DateTime(2026, 6, 13, 19, 0, 0),
-                Sede = "Gillette Stadium",
-                Estado = "FINALIZADO",
-                GolesLocal = 0,
-                GolesVisitante = 0
-            }
-        };
 
         // =========================================================
         // LISTADO
@@ -130,56 +43,19 @@ namespace FrontendAdministrativo.Controllers
                         grupoParaApi,
                         estadoParaApi);
 
-            List<PartidoDto> partidos;
-
-            if (partidosApi is not null)
-            {
-                partidos = partidosApi
+            List<PartidoDto> partidos =
+                partidosApi?
                     .Select(ConvertirPartidoApi)
-                    .OrderBy(partido => partido.FechaHora)
-                    .ToList();
-
-                ViewBag.UsandoDatosTemporales = false;
-            }
-            else
-            {
-                IEnumerable<PartidoDto> consulta =
-                    PartidosTemporales;
-
-                if (!string.IsNullOrWhiteSpace(grupo))
-                {
-                    consulta = consulta.Where(partido =>
-                        string.Equals(
-                            partido.Grupo,
-                            grupo,
-                            StringComparison.OrdinalIgnoreCase));
-                }
-
-                if (!string.IsNullOrWhiteSpace(estado))
-                {
-                    string estadoNormalizado =
-                        ConvertirEstadoParaVista(estado);
-
-                    consulta = consulta.Where(partido =>
-                        string.Equals(
-                            ConvertirEstadoParaVista(
-                                partido.Estado),
-                            estadoNormalizado,
-                            StringComparison.OrdinalIgnoreCase));
-                }
-
-                partidos = consulta
-                    .OrderBy(partido => partido.FechaHora)
-                    .ToList();
-
-                ViewBag.UsandoDatosTemporales = true;
-            }
+                    .OrderBy(partido => partido.NumeroPartidoFifa)
+                    .ToList()
+                ?? new List<PartidoDto>();
 
             var modelo = new PartidosIndexViewModel
             {
+                ApiDisponible = partidosApi is not null,
                 Partidos = partidos,
-                GrupoSeleccionado = grupo,
-                EstadoSeleccionado = estado,
+                GrupoSeleccionado = grupo ?? string.Empty,
+                EstadoSeleccionado = estado ?? string.Empty,
                 TotalPartidos = partidos.Count,
 
                 Programados = partidos.Count(partido =>
@@ -202,7 +78,7 @@ namespace FrontendAdministrativo.Controllers
         [HttpGet]
         public async Task<IActionResult> Detalles(int id)
         {
-           
+
             PartidoApiDto? partidoApi =
                 await _estadisticasApiService
                     .ObtenerPartidoPorIdAsync(id);
@@ -226,53 +102,103 @@ namespace FrontendAdministrativo.Controllers
                 return View(partido);
             }
 
-            // Respaldo temporal cuando la API está apagada.
-            PartidoDto? partidoTemporal =
-                PartidosTemporales.FirstOrDefault(
-                    partido => partido.Id == id);
+            TempData["MensajeError"] =
+                "El partido no está disponible en el Servicio de Estadísticas.";
 
-            if (partidoTemporal is null)
-            {
-                return NotFound();
-            }
-
-            return View(partidoTemporal);
+            return RedirectToAction(nameof(Index));
         }
 
         // =========================================================
-        // CREAR PARTIDO TEMPORAL
+        // CREAR PARTIDO REAL EN LA API
         // =========================================================
 
         [HttpGet]
-        public IActionResult Crear()
+        public async Task<IActionResult> Crear()
         {
+            List<PartidoApiDto>? partidosExistentes =
+                await _estadisticasApiService.ObtenerPartidosAsync();
+
+            if (partidosExistentes is null)
+            {
+                TempData["MensajeError"] =
+                    "No es posible crear partidos mientras la API no esté disponible.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            HashSet<int> numerosUtilizados =
+                partidosExistentes
+                    .Select(partido => partido.NumeroPartidoFifa)
+                    .ToHashSet();
+
             int siguienteNumero =
-                PartidosTemporales.Count == 0
-                    ? 1
-                    : PartidosTemporales.Max(partido =>
-                        partido.NumeroPartidoFifa) + 1;
+                Enumerable.Range(89, 16)
+                    .FirstOrDefault(numero =>
+                        !numerosUtilizados.Contains(numero));
+
+            if (siguienteNumero == 0)
+            {
+                TempData["MensajeError"] =
+                    "Los partidos desde octavos hasta la final (89 a 104) ya están registrados.";
+
+                return RedirectToAction(nameof(Index));
+            }
 
             var modelo = new PartidoFormViewModel
             {
                 NumeroPartidoFifa = siguienteNumero,
-                Fase = "Fase de grupos",
-                Grupo = "A",
+
+                Fase = "OCTAVOS",
+
                 FechaHora = DateTime.Now.AddDays(1),
-                Estado = "PROGRAMADO"
+                Estado = "PROGRAMADO",
+
+                CuotaLocal = 1.50m,
+                CuotaEmpate = 2.50m,
+                CuotaVisitante = 1.80m
             };
+
+            await CargarCatalogosAsync(modelo);
 
             return View(modelo);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Crear(
+        public async Task<IActionResult> Crear(
             PartidoFormViewModel modelo)
         {
+            await CargarCatalogosAsync(modelo);
+
+            List<PartidoApiDto>? partidosExistentes =
+                await _estadisticasApiService.ObtenerPartidosAsync();
+
+            if (partidosExistentes is null ||
+                !modelo.CatalogosDisponibles)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "La API no está disponible. No se guardó ningún partido.");
+
+                return View(modelo);
+            }
+
+            // La fase siempre se calcula en el servidor.
+            // No se confía en el valor enviado por el navegador.
+            modelo.Fase = ObtenerFasePorNumero(
+                modelo.NumeroPartidoFifa);
+
+            if (string.IsNullOrWhiteSpace(modelo.Fase))
+            {
+                ModelState.AddModelError(
+                    nameof(modelo.NumeroPartidoFifa),
+                    "El número del partido no es válido.");
+            }
+
             bool numeroRepetido =
-                PartidosTemporales.Any(partido =>
-                    partido.NumeroPartidoFifa ==
-                    modelo.NumeroPartidoFifa);
+    partidosExistentes.Any(partido =>
+        partido.NumeroPartidoFifa ==
+        modelo.NumeroPartidoFifa);
 
             if (numeroRepetido)
             {
@@ -280,121 +206,159 @@ namespace FrontendAdministrativo.Controllers
                     nameof(modelo.NumeroPartidoFifa),
                     "Ya existe un partido con ese número.");
             }
+            // Verifica que los equipos existan.
+            SeleccionApiDto? equipo1 =
+                modelo.Selecciones.FirstOrDefault(
+                    seleccion =>
+                        seleccion.Id ==
+                        modelo.SeleccionLocalId);
 
-            if (!ModelState.IsValid)
-            {
-                return View(modelo);
-            }
+            SeleccionApiDto? equipo2 =
+                modelo.Selecciones.FirstOrDefault(
+                    seleccion =>
+                        seleccion.Id ==
+                        modelo.SeleccionVisitanteId);
 
-            int nuevoId =
-                PartidosTemporales.Count == 0
-                    ? 1
-                    : PartidosTemporales.Max(partido =>
-                        partido.Id) + 1;
-
-            var nuevoPartido = new PartidoDto
-            {
-                Id = nuevoId,
-
-                NumeroPartidoFifa =
-                    modelo.NumeroPartidoFifa,
-
-                Fase = modelo.Fase.Trim(),
-
-                Grupo =
-                    string.IsNullOrWhiteSpace(modelo.Grupo)
-                        ? string.Empty
-                        : modelo.Grupo
-                            .Trim()
-                            .ToUpperInvariant(),
-
-                SeleccionLocal =
-                    modelo.SeleccionLocal.Trim(),
-
-                SeleccionVisitante =
-                    modelo.SeleccionVisitante.Trim(),
-
-                FechaHora = modelo.FechaHora,
-                Sede = modelo.Sede.Trim(),
-
-                Estado = ConvertirEstadoParaVista(
-                    modelo.Estado)
-            };
-
-            PartidosTemporales.Add(nuevoPartido);
-
-            TempData["MensajeExito"] =
-                "El partido temporal fue creado correctamente.";
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        // =========================================================
-        // EDITAR PARTIDO TEMPORAL
-        // =========================================================
-
-        [HttpGet]
-        public IActionResult Editar(int id)
-        {
-            PartidoDto? partido =
-                PartidosTemporales.FirstOrDefault(
-                    elemento => elemento.Id == id);
-
-            if (partido is null)
-            {
-                return NotFound();
-            }
-
-            var modelo = new PartidoFormViewModel
-            {
-                Id = partido.Id,
-
-                NumeroPartidoFifa =
-                    partido.NumeroPartidoFifa,
-
-                Fase = partido.Fase,
-                Grupo = partido.Grupo,
-
-                SeleccionLocal =
-                    partido.SeleccionLocal,
-
-                SeleccionVisitante =
-                    partido.SeleccionVisitante,
-
-                FechaHora = partido.FechaHora,
-                Sede = partido.Sede,
-                Estado = partido.Estado
-            };
-
-            return View(modelo);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Editar(
-            PartidoFormViewModel modelo)
-        {
-            PartidoDto? partido =
-                PartidosTemporales.FirstOrDefault(
-                    elemento =>
-                        elemento.Id == modelo.Id);
-
-            if (partido is null)
-            {
-                return NotFound();
-            }
-
-            bool numeroRepetido =
-                PartidosTemporales.Any(elemento =>
-                    elemento.Id != modelo.Id &&
-                    elemento.NumeroPartidoFifa ==
-                    modelo.NumeroPartidoFifa);
-
-            if (numeroRepetido)
+            if (modelo.SeleccionLocalId.HasValue &&
+                equipo1 is null)
             {
                 ModelState.AddModelError(
-                    nameof(modelo.NumeroPartidoFifa),
-                    "Ya existe otro partido con ese número.");
+                    nameof(modelo.SeleccionLocalId),
+                    "El Equipo 1 seleccionado no existe.");
+            }
+
+            if (modelo.SeleccionVisitanteId.HasValue &&
+                equipo2 is null)
+            {
+                ModelState.AddModelError(
+                    nameof(modelo.SeleccionVisitanteId),
+                    "El Equipo 2 seleccionado no existe.");
+            }
+
+            // Los dos equipos deben ser diferentes.
+            if (modelo.SeleccionLocalId.HasValue &&
+                modelo.SeleccionVisitanteId.HasValue &&
+                modelo.SeleccionLocalId.Value ==
+                modelo.SeleccionVisitanteId.Value)
+            {
+                ModelState.AddModelError(
+                    nameof(modelo.SeleccionVisitanteId),
+                    "Una selección no puede jugar contra sí misma.");
+            }
+
+            // Verifica que la sede exista.
+            bool sedeExiste =
+                modelo.SedeId.HasValue &&
+                modelo.Sedes.Any(sede =>
+                    sede.Id == modelo.SedeId.Value);
+
+            if (modelo.SedeId.HasValue &&
+                !sedeExiste)
+            {
+                ModelState.AddModelError(
+                    nameof(modelo.SedeId),
+                    "La sede seleccionada no existe.");
+            }
+
+            bool esFaseDeGrupos =
+                modelo.NumeroPartidoFifa >= 1 &&
+                modelo.NumeroPartidoFifa <= 72;
+
+            if (esFaseDeGrupos)
+            {
+                if (!modelo.GrupoId.HasValue)
+                {
+                    ModelState.AddModelError(
+                        nameof(modelo.GrupoId),
+                        "Debe seleccionar un grupo.");
+                }
+                else
+                {
+                    GrupoApiDto? grupoSeleccionado =
+                        modelo.Grupos.FirstOrDefault(
+                            grupo =>
+                                grupo.Id ==
+                                modelo.GrupoId.Value);
+
+                    if (grupoSeleccionado is null)
+                    {
+                        ModelState.AddModelError(
+                            nameof(modelo.GrupoId),
+                            "El grupo seleccionado no existe.");
+                    }
+                    else
+                    {
+                        string grupoEsperado =
+                            ConvertirGrupoParaVista(
+                                grupoSeleccionado.Nombre);
+
+                        if (equipo1 is not null &&
+                            ConvertirGrupoParaVista(
+                                equipo1.Grupo) != grupoEsperado)
+                        {
+                            ModelState.AddModelError(
+                                nameof(modelo.SeleccionLocalId),
+                                $"El Equipo 1 no pertenece al Grupo " +
+                                $"{grupoEsperado}.");
+                        }
+
+                        if (equipo2 is not null &&
+                            ConvertirGrupoParaVista(
+                                equipo2.Grupo) != grupoEsperado)
+                        {
+                            ModelState.AddModelError(
+                                nameof(modelo.SeleccionVisitanteId),
+                                $"El Equipo 2 no pertenece al Grupo " +
+                                $"{grupoEsperado}.");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // En eliminatorias no existe grupo.
+                modelo.GrupoId = null;
+                ModelState.Remove(
+                    nameof(modelo.GrupoId));
+            }
+
+            // Evita que un equipo tenga dos partidos
+            // exactamente en la misma fecha y hora.
+            if (modelo.SeleccionLocalId.HasValue &&
+                modelo.SeleccionVisitanteId.HasValue)
+            {
+                bool equipoOcupado =
+                    partidosExistentes.Any(partido =>
+                        partido.FechaHora ==
+                        modelo.FechaHora &&
+                        (
+                            partido.SeleccionLocal?.Id ==
+                                modelo.SeleccionLocalId.Value ||
+
+                            partido.SeleccionVisitante?.Id ==
+                                modelo.SeleccionLocalId.Value ||
+
+                            partido.SeleccionLocal?.Id ==
+                                modelo.SeleccionVisitanteId.Value ||
+
+                            partido.SeleccionVisitante?.Id ==
+                                modelo.SeleccionVisitanteId.Value
+                        ));
+
+                if (equipoOcupado)
+                {
+                    ModelState.AddModelError(
+                        nameof(modelo.FechaHora),
+                        "Uno de los equipos ya tiene otro partido " +
+                        "en esa fecha y hora.");
+                }
+            }
+
+            if (modelo.FechaHora == default)
+            {
+                ModelState.AddModelError(
+                    nameof(modelo.FechaHora),
+                    "Ingrese una fecha y hora válidas.");
             }
 
             if (!ModelState.IsValid)
@@ -402,52 +366,86 @@ namespace FrontendAdministrativo.Controllers
                 return View(modelo);
             }
 
-            partido.NumeroPartidoFifa =
-                modelo.NumeroPartidoFifa;
+            var nuevoPartido =
+                new CrearPartidoApiDto
+                {
+                    NumeroPartidoFifa =
+                        modelo.NumeroPartidoFifa,
 
-            partido.Fase =
-                modelo.Fase.Trim();
+                    SeleccionLocalId =
+                        modelo.SeleccionLocalId!.Value,
 
-            partido.Grupo =
-                string.IsNullOrWhiteSpace(modelo.Grupo)
-                    ? string.Empty
-                    : modelo.Grupo
-                        .Trim()
-                        .ToUpperInvariant();
+                    SeleccionVisitanteId =
+                        modelo.SeleccionVisitanteId!.Value,
 
-            partido.SeleccionLocal =
-                modelo.SeleccionLocal.Trim();
+                    SedeId =
+                        modelo.SedeId!.Value,
 
-            partido.SeleccionVisitante =
-                modelo.SeleccionVisitante.Trim();
+                    GrupoId =
+                        modelo.GrupoId,
 
-            partido.FechaHora =
-                modelo.FechaHora;
+                    FechaHora =
+                        modelo.FechaHora,
 
-            partido.Sede =
-                modelo.Sede.Trim();
+                    Fase =
+                        modelo.Fase,
 
-            partido.Estado =
-                ConvertirEstadoParaVista(
-                    modelo.Estado);
+                    CuotaLocal =
+                        modelo.CuotaLocal,
+
+                    CuotaEmpate =
+                        modelo.CuotaEmpate,
+
+                    CuotaVisitante =
+                        modelo.CuotaVisitante
+                };
+
+            bool creado =
+                await _estadisticasApiService
+                    .CrearPartidoAsync(nuevoPartido);
+
+            if (!creado)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "La API no pudo crear el partido. " +
+                    "Revise los datos y confirme que el servicio local " +
+                    "esté disponible.");
+
+                return View(modelo);
+            }
 
             TempData["MensajeExito"] =
-                "El partido temporal fue actualizado correctamente.";
+                $"El partido {modelo.NumeroPartidoFifa} " +
+                "fue creado correctamente.";
 
             return RedirectToAction(nameof(Index));
         }
+
 
         // =========================================================
         // REGISTRAR RESULTADO
         // =========================================================
 
         [HttpGet]
-        public async Task<IActionResult> RegistrarResultado(
-            int id)
+        public async Task<IActionResult> RegistrarResultado(int id)
         {
             PartidoApiDto? partidoApi =
                 await _estadisticasApiService
                     .ObtenerPartidoPorIdAsync(id);
+
+            // Si el endpoint individual no encuentra el partido,
+            // buscamos el ID dentro del listado completo.
+            if (partidoApi is null)
+            {
+                List<PartidoApiDto>? todosLosPartidos =
+                    await _estadisticasApiService
+                        .ObtenerPartidosAsync();
+
+                partidoApi = todosLosPartidos?
+                    .FirstOrDefault(partido =>
+                        partido.Id == id);
+            }
 
             if (partidoApi is not null)
             {
@@ -472,48 +470,17 @@ namespace FrontendAdministrativo.Controllers
                             partido.GolesLocal ?? 0,
 
                         GolesVisitante =
-                            partido.GolesVisitante ?? 0,
-
-                        EsDatoApi = true
+                            partido.GolesVisitante ?? 0
                     };
 
                 return View(modeloApi);
             }
 
-            PartidoDto? partidoTemporal =
-                PartidosTemporales.FirstOrDefault(
-                    partido => partido.Id == id);
+            TempData["MensajeError"] =
+                "No fue posible consultar el partido en la API. " +
+                "No se puede registrar un resultado sin conexión.";
 
-            if (partidoTemporal is null)
-            {
-                return NotFound();
-            }
-
-            var modeloTemporal =
-                new RegistrarResultadoViewModel
-                {
-                    PartidoId =
-                        partidoTemporal.Id,
-
-                    NumeroPartidoFifa =
-                        partidoTemporal.NumeroPartidoFifa,
-
-                    SeleccionLocal =
-                        partidoTemporal.SeleccionLocal,
-
-                    SeleccionVisitante =
-                        partidoTemporal.SeleccionVisitante,
-
-                    GolesLocal =
-                        partidoTemporal.GolesLocal ?? 0,
-
-                    GolesVisitante =
-                        partidoTemporal.GolesVisitante ?? 0,
-
-                    EsDatoApi = false
-                };
-
-            return View(modeloTemporal);
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -521,69 +488,118 @@ namespace FrontendAdministrativo.Controllers
         public async Task<IActionResult> RegistrarResultado(
             RegistrarResultadoViewModel modelo)
         {
+            PartidoApiDto? partidoApi =
+                await _estadisticasApiService
+                    .ObtenerPartidoPorIdAsync(modelo.PartidoId);
+
+            if (partidoApi is null)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No fue posible confirmar el partido en la API. " +
+                    "No se guardó el resultado.");
+
+                return View(modelo);
+            }
+
+            modelo.NumeroPartidoFifa = partidoApi.NumeroPartidoFifa;
+            modelo.SeleccionLocal =
+                partidoApi.SeleccionLocal?.Nombre ?? "Por definir";
+            modelo.SeleccionVisitante =
+                partidoApi.SeleccionVisitante?.Nombre ?? "Por definir";
+
             if (!ModelState.IsValid)
             {
                 return View(modelo);
             }
 
-            // El partido proviene de la API real.
-            if (modelo.EsDatoApi)
+            bool guardado =
+                await _estadisticasApiService
+                    .RegistrarResultadoAsync(
+                        modelo.PartidoId,
+                        modelo.GolesLocal,
+                        modelo.GolesVisitante);
+
+            if (!guardado)
             {
-                bool guardado =
-                    await _estadisticasApiService
-                        .RegistrarResultadoAsync(
-                            modelo.PartidoId,
-                            modelo.GolesLocal,
-                            modelo.GolesVisitante);
+                ModelState.AddModelError(
+                    string.Empty,
+                    "La API no pudo registrar el resultado. " +
+                    "No se aplicó ningún cambio local.");
 
-                if (!guardado)
-                {
-                    ModelState.AddModelError(
-                        string.Empty,
-                        "La API no pudo registrar el resultado. " +
-                        "Revise que el servicio de Andrea esté activo.");
-
-                    return View(modelo);
-                }
-
-                TempData["MensajeExito"] =
-                    $"Resultado registrado correctamente: " +
-                    $"{modelo.SeleccionLocal} " +
-                    $"{modelo.GolesLocal} - " +
-                    $"{modelo.GolesVisitante} " +
-                    $"{modelo.SeleccionVisitante}.";
-
-                return RedirectToAction(nameof(Index));
+                return View(modelo);
             }
-
-            // Respaldo temporal cuando la API está apagada.
-            PartidoDto? partidoTemporal =
-                PartidosTemporales.FirstOrDefault(
-                    partido =>
-                        partido.Id == modelo.PartidoId);
-
-            if (partidoTemporal is null)
-            {
-                return NotFound();
-            }
-
-            partidoTemporal.GolesLocal =
-                modelo.GolesLocal;
-
-            partidoTemporal.GolesVisitante =
-                modelo.GolesVisitante;
-
-            partidoTemporal.Estado =
-                "FINALIZADO";
 
             TempData["MensajeExito"] =
-                $"Resultado temporal registrado: " +
-                $"{partidoTemporal.SeleccionLocal} " +
+                $"Resultado registrado correctamente: " +
+                $"{modelo.SeleccionLocal} " +
                 $"{modelo.GolesLocal} - " +
                 $"{modelo.GolesVisitante} " +
-                $"{partidoTemporal.SeleccionVisitante}.";
+                $"{modelo.SeleccionVisitante}.";
 
             return RedirectToAction(nameof(Index));
+        }
+        private static string ObtenerFasePorNumero(
+    int numeroPartido)
+        {
+            return numeroPartido switch
+            {
+                >= 89 and <= 96 =>
+                    "OCTAVOS",
+
+                >= 97 and <= 100 =>
+                    "CUARTOS",
+
+                >= 101 and <= 102 =>
+                    "SEMIFINAL",
+
+                103 =>
+                    "TERCER_PUESTO",
+
+                104 =>
+                    "FINAL",
+
+                _ =>
+                    string.Empty
+            };
+        }
+
+        private async Task CargarCatalogosAsync(
+            PartidoFormViewModel modelo)
+        {
+            List<SeleccionApiDto>? selecciones =
+                await _estadisticasApiService
+                    .ObtenerSeleccionesAsync();
+
+            List<SedeApiDto>? sedes =
+                await _estadisticasApiService
+                    .ObtenerSedesAsync();
+
+            modelo.CatalogosDisponibles =
+                selecciones is not null &&
+                sedes is not null;
+
+            modelo.Selecciones = selecciones ?? new();
+            modelo.Sedes = sedes ?? new();
+            modelo.Grupos = new();
+
+            modelo.Selecciones =
+                modelo.Selecciones
+                    .OrderBy(seleccion =>
+                        seleccion.Nombre)
+                    .ToList();
+
+            modelo.Sedes =
+                modelo.Sedes
+                    .OrderBy(sede =>
+                        sede.Nombre)
+                    .ToList();
+
+            modelo.Grupos =
+                modelo.Grupos
+                    .OrderBy(grupo =>
+                        grupo.Id)
+                    .ToList();
         }
 
         // =========================================================
@@ -596,7 +612,8 @@ namespace FrontendAdministrativo.Controllers
             return new PartidoDto
             {
                 Id = partidoApi.Id,
-                NumeroPartidoFifa = partidoApi.Id,
+                NumeroPartidoFifa =
+        partidoApi.NumeroPartidoFifa,
 
                 SeleccionLocal =
                     partidoApi.SeleccionLocal?.Nombre
@@ -826,6 +843,207 @@ namespace FrontendAdministrativo.Controllers
             }
 
             return string.Empty;
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Eliminar(int id)
+        {
+            PartidoApiDto? partido =
+                await _estadisticasApiService
+                    .ObtenerPartidoPorIdAsync(id);
+
+            if (partido is null)
+            {
+                TempData["MensajeError"] =
+                    "El partido no existe o ya fue eliminado.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!string.Equals(
+                    partido.Estado,
+                    "PROGRAMADO",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["MensajeError"] =
+                    $"El partido #{partido.NumeroPartidoFifa} " +
+                    "no puede eliminarse porque no está programado.";
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            (bool exito, string mensaje) =
+                await _estadisticasApiService
+                    .EliminarPartidoAsync(id);
+
+            if (!exito)
+            {
+                TempData["MensajeError"] =
+                    mensaje;
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["MensajeExito"] =
+                $"El partido #{partido.NumeroPartidoFifa} " +
+                "fue eliminado correctamente.";
+
+            return RedirectToAction(nameof(Index));
+        }
+        private static bool AsignarEquiposClasificados(
+    PartidoFormViewModel modelo,
+    List<PartidoApiDto> partidos)
+        {
+            var origenes =
+                ObtenerPartidosDeOrigen(
+                    modelo.NumeroPartidoFifa);
+
+            if (origenes is null)
+            {
+                modelo.PuedeCrearPartido = true;
+                return true;
+            }
+
+            PartidoApiDto? partidoOrigen1 =
+                partidos.FirstOrDefault(partido =>
+                    partido.NumeroPartidoFifa ==
+                    origenes.Value.Partido1);
+
+            PartidoApiDto? partidoOrigen2 =
+                partidos.FirstOrDefault(partido =>
+                    partido.NumeroPartidoFifa ==
+                    origenes.Value.Partido2);
+
+            if (partidoOrigen1 is null ||
+                partidoOrigen2 is null)
+            {
+                modelo.PuedeCrearPartido = false;
+
+                modelo.MensajeClasificacion =
+                    $"Primero deben existir los partidos FIFA " +
+                    $"#{origenes.Value.Partido1} y " +
+                    $"#{origenes.Value.Partido2}.";
+
+                return false;
+            }
+
+            if (!PartidoTieneResultado(partidoOrigen1) ||
+                !PartidoTieneResultado(partidoOrigen2))
+            {
+                modelo.PuedeCrearPartido = false;
+
+                modelo.MensajeClasificacion =
+                    $"Primero deben registrarse los resultados de los " +
+                    $"partidos FIFA #{origenes.Value.Partido1} y " +
+                    $"#{origenes.Value.Partido2}.";
+
+                return false;
+            }
+
+            SeleccionApiDto? equipo1 =
+                ObtenerSeleccionPorResultado(
+                    partidoOrigen1,
+                    origenes.Value.UsarGanador1);
+
+            SeleccionApiDto? equipo2 =
+                ObtenerSeleccionPorResultado(
+                    partidoOrigen2,
+                    origenes.Value.UsarGanador2);
+
+            if (equipo1 is null || equipo2 is null)
+            {
+                modelo.PuedeCrearPartido = false;
+
+                modelo.MensajeClasificacion =
+                    "No se puede determinar el clasificado porque " +
+                    "uno de los partidos terminó empatado y la API " +
+                    "no indica el ganador por penales.";
+
+                return false;
+            }
+
+            modelo.SeleccionLocalId = equipo1.Id;
+            modelo.SeleccionVisitanteId = equipo2.Id;
+
+            modelo.SeleccionLocal = equipo1.Nombre;
+            modelo.SeleccionVisitante = equipo2.Nombre;
+
+            modelo.EquiposAsignadosAutomaticamente = true;
+            modelo.PuedeCrearPartido = true;
+
+            modelo.MensajeClasificacion =
+                $"Equipos asignados automáticamente según los " +
+                $"resultados de los partidos FIFA " +
+                $"#{origenes.Value.Partido1} y " +
+                $"#{origenes.Value.Partido2}.";
+
+            return true;
+        }
+
+        private static bool PartidoTieneResultado(
+            PartidoApiDto partido)
+        {
+            return string.Equals(
+                       partido.Estado,
+                       "FINALIZADO",
+                       StringComparison.OrdinalIgnoreCase) &&
+                   partido.GolesLocal.HasValue &&
+                   partido.GolesVisitante.HasValue;
+        }
+
+        private static SeleccionApiDto? ObtenerSeleccionPorResultado(
+            PartidoApiDto partido,
+            bool usarGanador)
+        {
+            if (!partido.GolesLocal.HasValue ||
+                !partido.GolesVisitante.HasValue)
+            {
+                return null;
+            }
+
+            if (partido.GolesLocal.Value ==
+                partido.GolesVisitante.Value)
+            {
+                return null;
+            }
+
+            bool ganoLocal =
+                partido.GolesLocal.Value >
+                partido.GolesVisitante.Value;
+
+            if (!usarGanador)
+            {
+                ganoLocal = !ganoLocal;
+            }
+
+            return ganoLocal
+                ? partido.SeleccionLocal
+                : partido.SeleccionVisitante;
+        }
+
+        private static (
+            int Partido1,
+            bool UsarGanador1,
+            int Partido2,
+            bool UsarGanador2)?
+            ObtenerPartidosDeOrigen(
+                int numeroPartidoFifa)
+        {
+            return numeroPartidoFifa switch
+            {
+                97 => (89, true, 90, true),
+                98 => (93, true, 94, true),
+                99 => (91, true, 92, true),
+                100 => (95, true, 96, true),
+
+                101 => (97, true, 98, true),
+                102 => (99, true, 100, true),
+
+                103 => (101, false, 102, false),
+                104 => (101, true, 102, true),
+
+                _ => null
+            };
         }
     }
 }

@@ -57,7 +57,7 @@ namespace FrontendAdministrativo.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    "Las credenciales temporales no están configuradas."
+                    "Las credenciales administrativas no están configuradas."
                 );
 
                 return View(modelo);

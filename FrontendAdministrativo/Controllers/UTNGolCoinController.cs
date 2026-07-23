@@ -1,94 +1,234 @@
-﻿using FrontendAdministrativo.Models.ViewModels;
+﻿using FrontendAdministrativo.Models.Api;
+using FrontendAdministrativo.Models.ViewModels;
+using FrontendAdministrativo.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FrontendAdministrativo.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "ADMINISTRADOR")]
     public class UTNGolCoinController : Controller
     {
-        private static readonly UTNGolCoinViewModel Configuracion =
-            new()
-            {
-                BonoInicial = 100,
-                MonedasPorAcierto = 200,
-                LimiteMaximoApuesta = 500,
-                ApuestasHabilitadas = true,
+        private readonly UTNGolCoinApiService
+            _utnGolCoinApiService;
 
-                MonedasEnCirculacion = 12500,
-                TotalApuestas = 148,
-                PartidoMasApostado = "México vs. Sudáfrica"
-            };
+        public UTNGolCoinController(
+            UTNGolCoinApiService utnGolCoinApiService)
+        {
+            _utnGolCoinApiService =
+                utnGolCoinApiService;
+        }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View(CopiarConfiguracion());
+            var modelo = new UTNGolCoinViewModel();
+
+            await CargarDatosRealesAsync(modelo);
+
+            return View(modelo);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Guardar(
+        public async Task<IActionResult> Guardar(
             UTNGolCoinViewModel modelo)
         {
-            if (!ModelState.IsValid)
+            ConfiguracionUTNGolCoinApiDto? configuracionActual =
+                await _utnGolCoinApiService
+                    .ObtenerConfiguracionAsync();
+
+            if (configuracionActual is null)
             {
-                modelo.MonedasEnCirculacion =
-                    Configuracion.MonedasEnCirculacion;
+                ModelState.AddModelError(
+                    string.Empty,
+                    "La configuración no está disponible. " +
+                    "No se realizó ningún cambio.");
 
-                modelo.TotalApuestas =
-                    Configuracion.TotalApuestas;
-
-                modelo.PartidoMasApostado =
-                    Configuracion.PartidoMasApostado;
+                await CargarRankingAsync(modelo);
+                modelo.ConfiguracionDisponible = false;
 
                 return View("Index", modelo);
             }
 
-            Configuracion.BonoInicial =
-                modelo.BonoInicial;
+            if (!ModelState.IsValid)
+            {
+                await CargarRankingAsync(modelo);
 
-            Configuracion.MonedasPorAcierto =
-                modelo.MonedasPorAcierto;
+                modelo.ConfiguracionDisponible = true;
 
-            Configuracion.LimiteMaximoApuesta =
-                modelo.LimiteMaximoApuesta;
+                return View("Index", modelo);
+            }
 
-            Configuracion.ApuestasHabilitadas =
-                modelo.ApuestasHabilitadas;
+            var configuracion =
+                new ConfiguracionUTNGolCoinApiDto
+                {
+                    BonoInicial =
+                        modelo.BonoInicial,
+
+                    MonedasPorAcierto =
+                        modelo.MonedasPorAcierto,
+
+                    LimiteMaximoApuesta =
+                        modelo.LimiteMaximoApuesta,
+
+                    ApuestasHabilitadas =
+                        modelo.ApuestasHabilitadas
+                };
+
+            bool actualizado =
+                await _utnGolCoinApiService
+                    .ActualizarConfiguracionAsync(
+                        configuracion);
+
+            if (!actualizado)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No fue posible actualizar la configuración " +
+                    "en la API UTNGolCoin.");
+
+                await CargarRankingAsync(modelo);
+
+                modelo.ConfiguracionDisponible = false;
+
+                return View("Index", modelo);
+            }
 
             TempData["MensajeExito"] =
-                "La configuración de UTNGolCoin fue actualizada.";
+                "La configuración de UTNGolCoin fue " +
+                "actualizada correctamente en la API.";
 
             return RedirectToAction(nameof(Index));
         }
-
-        private static UTNGolCoinViewModel
-            CopiarConfiguracion()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AvanzarDia()
         {
-            return new UTNGolCoinViewModel
+            SimulacionDiaApiDto? resultado =
+                await _utnGolCoinApiService
+                    .AvanzarDiaAsync();
+
+            if (resultado is null)
             {
-                BonoInicial =
-                    Configuracion.BonoInicial,
+                TempData["MensajeError"] =
+                    "No fue posible avanzar la fecha simulada. " +
+                    "Verifique que la API de UTNGolCoin esté activa.";
 
-                MonedasPorAcierto =
-                    Configuracion.MonedasPorAcierto,
+                return RedirectToAction(nameof(Index));
+            }
 
-                LimiteMaximoApuesta =
-                    Configuracion.LimiteMaximoApuesta,
+            if (resultado.UsuariosBeneficiados == 0)
+            {
+                TempData["MensajeExito"] =
+                    $"La fecha simulada avanzó al " +
+                    $"{resultado.FechaSimulada:dd/MM/yyyy}. " +
+                    "No había billeteras con saldo cero.";
+            }
+            else
+            {
+                string palabraUsuario =
+                    resultado.UsuariosBeneficiados == 1
+                        ? "usuario fue beneficiado"
+                        : "usuarios fueron beneficiados";
 
-                ApuestasHabilitadas =
-                    Configuracion.ApuestasHabilitadas,
+                TempData["MensajeExito"] =
+                    $"La fecha simulada avanzó al " +
+                    $"{resultado.FechaSimulada:dd/MM/yyyy}. " +
+                    $"{resultado.UsuariosBeneficiados} " +
+                    $"{palabraUsuario} y se entregaron " +
+                    $"{resultado.MonedasEntregadas:0.##} UTNGolCoin.";
+            }
 
-                MonedasEnCirculacion =
-                    Configuracion.MonedasEnCirculacion,
+            return RedirectToAction(nameof(Index));
+        }
+        private async Task CargarDatosRealesAsync(
+            UTNGolCoinViewModel modelo)
+        {
+            List<RankingUTNGolCoinApiDto>? ranking =
+                await _utnGolCoinApiService
+                    .ObtenerRankingAsync();
 
-                TotalApuestas =
-                    Configuracion.TotalApuestas,
+            ConfiguracionUTNGolCoinApiDto? configuracion =
+                await _utnGolCoinApiService
+                    .ObtenerConfiguracionAsync();
 
-                PartidoMasApostado =
-                    Configuracion.PartidoMasApostado
-            };
+            if (ranking is not null)
+            {
+                modelo.ServicioDisponible = true;
+
+                modelo.Ranking = ranking
+                    .OrderByDescending(usuario =>
+                        usuario.Saldo)
+                    .ToList();
+
+                modelo.TotalBilleteras =
+                    ranking.Count;
+
+                modelo.MonedasEnCirculacion =
+                    ranking.Sum(usuario =>
+                        usuario.Saldo);
+            }
+            else
+            {
+                modelo.ServicioDisponible = false;
+                modelo.Ranking = new();
+                modelo.TotalBilleteras = 0;
+                modelo.MonedasEnCirculacion = 0;
+            }
+
+            if (configuracion is not null)
+            {
+                modelo.ConfiguracionDisponible = true;
+
+                modelo.BonoInicial =
+                    configuracion.BonoInicial;
+
+                modelo.MonedasPorAcierto =
+                    configuracion.MonedasPorAcierto;
+
+                modelo.LimiteMaximoApuesta =
+                    configuracion.LimiteMaximoApuesta;
+
+                modelo.ApuestasHabilitadas =
+                    configuracion.ApuestasHabilitadas;
+            }
+            else
+            {
+                modelo.ConfiguracionDisponible = false;
+            }
+        }
+
+        private async Task CargarRankingAsync(
+            UTNGolCoinViewModel modelo)
+        {
+            List<RankingUTNGolCoinApiDto>? ranking =
+                await _utnGolCoinApiService
+                    .ObtenerRankingAsync();
+
+            if (ranking is null)
+            {
+                modelo.ServicioDisponible = false;
+                modelo.Ranking = new();
+                modelo.TotalBilleteras = 0;
+                modelo.MonedasEnCirculacion = 0;
+
+                return;
+            }
+
+            modelo.ServicioDisponible = true;
+
+            modelo.Ranking = ranking
+                .OrderByDescending(usuario =>
+                    usuario.Saldo)
+                .ToList();
+
+            modelo.TotalBilleteras =
+                ranking.Count;
+
+            modelo.MonedasEnCirculacion =
+                ranking.Sum(usuario =>
+                    usuario.Saldo);
         }
     }
 }

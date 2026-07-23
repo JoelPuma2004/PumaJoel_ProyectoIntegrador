@@ -19,6 +19,8 @@
 
     public class AuditoriaIndexViewModel
     {
+        public bool ApiDisponible { get; set; }
+
         public List<AuditoriaViewModel> Registros { get; set; } = new();
 
         public string? Buscar { get; set; }
