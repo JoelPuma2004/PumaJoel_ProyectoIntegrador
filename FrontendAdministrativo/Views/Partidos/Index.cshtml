@@ -20,11 +20,11 @@
         flex-shrink: 0;
     }
 </style>
-@if (ViewBag.UsandoDatosTemporales == true)
+@if (!Model.ApiDisponible)
 {
-    <div class="alert alert-warning">
+    <div class="alert alert-danger">
         No fue posible conectarse con el Servicio de Estadísticas.
-        Se muestran datos temporales de respaldo.
+        El calendario no está disponible y no se muestran datos de respaldo.
     </div>
 }
 else
@@ -46,6 +46,12 @@ else
         </button>
     </div>
 }
+@if (TempData["MensajeError"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["MensajeError"]
+    </div>
+}
 
 <div class="page-header">
     <div>
@@ -53,11 +59,14 @@ else
         <p>Consulta y filtra el calendario oficial del Mundial 2026.</p>
     </div>
 
-    <a asp-controller="Partidos"
-       asp-action="Crear"
-       class="btn btn-primary">
-        Nuevo partido
-    </a>
+    @if (Model.ApiDisponible)
+    {
+        <a asp-controller="Partidos"
+           asp-action="Crear"
+           class="btn btn-primary">
+            Nuevo partido de octavos
+        </a>
+    }
 </div>
 
 <div class="row g-3 mb-4">
@@ -202,7 +211,14 @@ else
         </div>
     </div>
 
-    @if (Model.Partidos.Count == 0)
+    @if (!Model.ApiDisponible)
+    {
+        <div class="empty-state">
+            <h4>Calendario no disponible</h4>
+            <p>Inicie la API local y vuelva a intentar.</p>
+        </div>
+    }
+    else if (Model.Partidos.Count == 0)
     {
         <div class="empty-state">
             <h4>No se encontraron partidos</h4>
@@ -263,7 +279,7 @@ else
 
                                     <span>vs.</span>
 
-                                    +             <span class="equipo-con-bandera">
+                                    <span class="equipo-con-bandera">
 
                                     @if (!string.IsNullOrWhiteSpace(
                                         partido.CodigoBanderaVisitante))

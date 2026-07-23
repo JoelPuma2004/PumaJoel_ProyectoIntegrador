@@ -89,20 +89,27 @@
         </button>
     </div>
 }
+@if (!Model.ApiDisponible)
+{
+    <div class="alert alert-danger">
+        La API de Estadísticas no está disponible. El historial de auditoría
+        no se sustituye con registros locales.
+    </div>
+}
 
 <div class="row g-3 mb-4">
 
     <div class="col-lg-4">
         <div class="auditoria-resumen">
             <span>Registros encontrados</span>
-            <strong>@Model.TotalRegistros</strong>
+            <strong>@(Model.ApiDisponible ? Model.TotalRegistros.ToString() : "N/D")</strong>
         </div>
     </div>
 
     <div class="col-lg-4">
         <div class="auditoria-resumen">
             <span>Módulos registrados</span>
-            <strong>@totalModulos</strong>
+            <strong>@(Model.ApiDisponible ? totalModulos.ToString() : "N/D")</strong>
         </div>
     </div>
 
@@ -227,7 +234,13 @@
         Historial de actividades
     </h4>
 
-    @if (Model.Registros.Count == 0)
+    @if (!Model.ApiDisponible)
+    {
+        <div class="alert alert-danger mb-0">
+            Historial no disponible. Inicie la API local y vuelva a intentar.
+        </div>
+    }
+    else if (Model.Registros.Count == 0)
     {
         <div class="alert alert-info mb-0">
             No se encontraron registros con los filtros seleccionados.

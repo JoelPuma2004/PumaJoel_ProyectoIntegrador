@@ -12,8 +12,6 @@ namespace FrontendAdministrativo.Models.ViewModels
 
         public string SeleccionVisitante { get; set; } = string.Empty;
 
-        public bool EsDatoApi { get; set; }
-
         [Display(Name = "Goles del equipo local")]
         [Required(ErrorMessage = "Ingrese los goles del equipo local.")]
         [Range(0, 99, ErrorMessage = "Los goles deben estar entre 0 y 99.")]

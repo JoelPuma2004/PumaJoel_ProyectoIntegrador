@@ -25,6 +25,8 @@ namespace FrontendAdministrativo.Models.ViewModels
 
     public class UsuariosIndexViewModel
     {
+        public bool ApiDisponible { get; set; }
+
         public List<UsuarioAdminViewModel> Usuarios { get; set; }
             = new();
 

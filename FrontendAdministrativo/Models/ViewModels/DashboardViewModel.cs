@@ -9,6 +9,7 @@
 
         public bool ApiEstadisticasDisponible { get; set; }
         public bool ApiUtnGolCoinDisponible { get; set; }
+        public bool UsuariosDisponibles { get; set; }
 
         public List<ActividadRecienteViewModel> ActividadesRecientes { get; set; }
             = new List<ActividadRecienteViewModel>();

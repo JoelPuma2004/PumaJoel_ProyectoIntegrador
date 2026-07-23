@@ -68,14 +68,14 @@
 
     <p>
         Consulta el estado de las billeteras y administra
-        parámetros temporales de monedas y apuestas.
+        los parámetros reales de monedas y apuestas.
     </p>
 </div>
 
 @if (Model.ServicioDisponible)
 {
     <div class="alert alert-success">
-        Conectado correctamente con la API UTNGolCoin de Mayra.
+        Conectado correctamente con la API UTNGolCoin local.
         Las monedas en circulación y las billeteras son datos reales.
     </div>
 }
@@ -83,8 +83,7 @@ else
 {
     <div class="alert alert-danger">
         No fue posible conectarse con la API UTNGolCoin.
-        Revisa que Mayra tenga el servicio encendido y que ambos
-        equipos estén conectados a la misma red.
+        Inicie el servicio local y vuelva a intentar.
     </div>
 }
 
@@ -92,7 +91,7 @@ else
 {
     <div class="alert alert-success">
         La configuración de apuestas está conectada
-        con la API real de Mayra.
+        con la API real.
     </div>
 }
 else
@@ -139,7 +138,9 @@ else
             <span>Monedas en circulación</span>
 
             <strong>
-                @Model.MonedasEnCirculacion.ToString("N0")
+                @(Model.ServicioDisponible
+                    ? Model.MonedasEnCirculacion.ToString("N0")
+                    : "N/D")
             </strong>
 
             <small class="text-muted">
@@ -153,7 +154,9 @@ else
             <span>Billeteras registradas</span>
 
             <strong>
-                @Model.TotalBilleteras
+                @(Model.ServicioDisponible
+                    ? Model.TotalBilleteras.ToString()
+                    : "N/D")
             </strong>
 
             <small class="text-muted">
@@ -315,6 +318,8 @@ else if (Model.ServicioDisponible)
     </div>
 }
 
+@if (Model.ConfiguracionDisponible)
+{
 <div class="coin-panel">
 
     <h4 class="mb-3">
@@ -435,6 +440,17 @@ else if (Model.ServicioDisponible)
     </form>
 
 </div>
+}
+else
+{
+    <div class="coin-panel">
+        <h4 class="mb-3">Parámetros de apuestas</h4>
+        <div class="alert alert-danger mb-0">
+            Configuración no disponible. No se muestran valores ni se
+            habilita el guardado hasta que responda la API real.
+        </div>
+    </div>
+}
 
 @section Scripts {
 

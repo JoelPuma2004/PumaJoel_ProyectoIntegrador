@@ -30,12 +30,12 @@ namespace FrontendAdministrativo.Controllers
 
             if (respuestaApi is null)
             {
-                TempData["MensajeError"] =
-                    "No fue posible consultar la auditoría. " +
-                    "Revise que el servicio de Andrea esté disponible.";
-
-                respuestaApi =
-                    new List<AuditoriaApiDto>();
+                return View(new AuditoriaIndexViewModel
+                {
+                    ApiDisponible = false,
+                    Buscar = buscar,
+                    ModuloSeleccionado = modulo
+                });
             }
 
             List<AuditoriaViewModel> todosLosRegistros =
@@ -78,6 +78,7 @@ namespace FrontendAdministrativo.Controllers
 
             var modelo = new AuditoriaIndexViewModel
             {
+                ApiDisponible = true,
                 Registros =
                     resultado,
 

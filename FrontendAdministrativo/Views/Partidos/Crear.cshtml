@@ -22,17 +22,14 @@
 
 @{
     bool faltanCatalogos =
-        Model.Selecciones.Count == 0 ||
-        Model.Sedes.Count == 0 ||
-        (Model.NumeroPartidoFifa <= 72 &&
-         Model.Grupos.Count == 0);
+        !Model.CatalogosDisponibles;
 }
 
 @if (faltanCatalogos)
 {
     <div class="alert alert-danger">
-        No fue posible cargar todos los catálogos de la API.
-        Revise que el servicio de Andrea esté activo.
+        No fue posible cargar selecciones y sedes desde la API.
+        La creación permanece deshabilitada y no se usarán datos de respaldo.
     </div>
 }
 
@@ -65,12 +62,12 @@
                 <input asp-for="NumeroPartidoFifa"
                        class="form-control"
                        type="number"
-                       min="1"
-                       max="104"
+                       min="89"
+                       max="96"
                        readonly />
 
                 <small class="text-muted">
-                    Se asigna automáticamente el siguiente número libre.
+                    Se asigna el siguiente número libre de octavos (89 a 96).
                 </small>
 
                 <span asp-validation-for="NumeroPartidoFifa"
@@ -94,7 +91,7 @@
                        readonly />
 
                 <small class="text-muted">
-                    La fase se calcula según el número del partido.
+                    Para este alcance, la carga manual se limita a octavos.
                 </small>
 
                 <span asp-validation-for="Fase"
@@ -415,53 +412,10 @@
                 document.getElementById("GrupoAyuda");
 
             function obtenerFase(numero) {
-
-                if (numero >= 1 && numero <= 72) {
-                    return {
-                        codigo: "GRUPOS",
-                        texto: "Fase de grupos"
-                    };
-                }
-
-                if (numero <= 88) {
-                    return {
-                        codigo: "DIECISEISAVOS",
-                        texto: "Dieciseisavos de final"
-                    };
-                }
-
-                if (numero <= 96) {
+                if (numero >= 89 && numero <= 96) {
                     return {
                         codigo: "OCTAVOS",
                         texto: "Octavos de final"
-                    };
-                }
-
-                if (numero <= 100) {
-                    return {
-                        codigo: "CUARTOS",
-                        texto: "Cuartos de final"
-                    };
-                }
-
-                if (numero <= 102) {
-                    return {
-                        codigo: "SEMIFINAL",
-                        texto: "Semifinal"
-                    };
-                }
-
-                if (numero === 103) {
-                    return {
-                        codigo: "TERCER_PUESTO",
-                        texto: "Tercer puesto"
-                    };
-                }
-
-                if (numero === 104) {
-                    return {
-                        codigo: "FINAL",
-                        texto: "Final"
                     };
                 }
 
@@ -485,25 +439,10 @@
                 faseTexto.value =
                     fase.texto;
 
-                const esFaseDeGrupos =
-                    numero >= 1 &&
-                    numero <= 72;
-
-                if (esFaseDeGrupos) {
-
-                    grupoSelect.disabled = false;
-
-                    grupoAyuda.textContent =
-                        "El grupo es obligatorio.";
-
-                } else {
-
-                    grupoSelect.value = "";
-                    grupoSelect.disabled = true;
-
-                    grupoAyuda.textContent =
-                        "No aplica en fases eliminatorias.";
-                }
+                grupoSelect.value = "";
+                grupoSelect.disabled = true;
+                grupoAyuda.textContent =
+                    "No aplica en octavos de final.";
             }
 
             numeroInput.addEventListener(

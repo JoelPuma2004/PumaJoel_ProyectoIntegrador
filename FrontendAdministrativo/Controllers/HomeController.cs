@@ -36,6 +36,10 @@ namespace FrontendAdministrativo.Controllers
                 _estadisticasApiService
                     .ObtenerSeleccionesAsync();
 
+            var tareaUsuarios =
+                _estadisticasApiService
+                    .ObtenerUsuariosAsync();
+
             var tareaUtnGolCoin =
                 _utnGolCoinApiService
                     .EstaDisponibleAsync();
@@ -43,6 +47,7 @@ namespace FrontendAdministrativo.Controllers
             await Task.WhenAll(
                 tareaPartidos,
                 tareaSelecciones,
+                tareaUsuarios,
                 tareaUtnGolCoin);
 
             var partidos =
@@ -50,6 +55,9 @@ namespace FrontendAdministrativo.Controllers
 
             var selecciones =
                 await tareaSelecciones;
+
+            var usuarios =
+                await tareaUsuarios;
 
             bool apiUtnGolCoinDisponible =
                 await tareaUtnGolCoin;
@@ -151,8 +159,10 @@ namespace FrontendAdministrativo.Controllers
                     PartidosFinalizados =
                         partidosFinalizados,
 
-                    // Temporal hasta conectar la API de usuarios.
-                    TotalUsuarios = 3,
+                    TotalUsuarios = usuarios?.Count ?? 0,
+
+                    UsuariosDisponibles =
+                        usuarios is not null,
 
                     ApiEstadisticasDisponible =
                         apiEstadisticasDisponible,

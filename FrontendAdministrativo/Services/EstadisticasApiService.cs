@@ -29,10 +29,14 @@ namespace FrontendAdministrativo.Services
 
                 respuesta.EnsureSuccessStatusCode();
 
-                List<PartidoApiDto> partidos =
+                List<PartidoApiDto>? partidos =
                     await respuesta.Content
-                        .ReadFromJsonAsync<List<PartidoApiDto>>()
-                    ?? new List<PartidoApiDto>();
+                        .ReadFromJsonAsync<List<PartidoApiDto>>();
+
+                if (partidos is null)
+                {
+                    return null;
+                }
 
                 if (!string.IsNullOrWhiteSpace(grupo))
                 {
@@ -368,8 +372,7 @@ namespace FrontendAdministrativo.Services
                 respuesta.EnsureSuccessStatusCode();
 
                 return await respuesta.Content
-                    .ReadFromJsonAsync<List<UsuarioApiDto>>()
-                    ?? new List<UsuarioApiDto>();
+                    .ReadFromJsonAsync<List<UsuarioApiDto>>();
             }
             catch (HttpRequestException ex)
             {
@@ -513,8 +516,7 @@ namespace FrontendAdministrativo.Services
                 respuesta.EnsureSuccessStatusCode();
 
                 return await respuesta.Content
-                    .ReadFromJsonAsync<List<AuditoriaApiDto>>()
-                    ?? new List<AuditoriaApiDto>();
+                    .ReadFromJsonAsync<List<AuditoriaApiDto>>();
             }
             catch (HttpRequestException ex)
             {
@@ -701,10 +703,14 @@ namespace FrontendAdministrativo.Services
                     return false;
                 }
 
-                List<PartidoApiDto> partidos =
+                List<PartidoApiDto>? partidos =
                     await respuestaListado.Content
-                        .ReadFromJsonAsync<List<PartidoApiDto>>()
-                    ?? new List<PartidoApiDto>();
+                        .ReadFromJsonAsync<List<PartidoApiDto>>();
+
+                if (partidos is null)
+                {
+                    return false;
+                }
 
                 PartidoApiDto? partidoEncontrado =
                     partidos.FirstOrDefault(

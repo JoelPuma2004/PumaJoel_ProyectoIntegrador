@@ -31,12 +31,13 @@ namespace FrontendAdministrativo.Controllers
 
             if (respuestaApi is null)
             {
-                TempData["MensajeError"] =
-                    "No fue posible consultar los usuarios. " +
-                    "Revise que el servicio de Andrea esté disponible.";
-
-                respuestaApi =
-                    new List<UsuarioApiDto>();
+                return View(new UsuariosIndexViewModel
+                {
+                    ApiDisponible = false,
+                    Buscar = buscar,
+                    RolSeleccionado = rol,
+                    EstadoSeleccionado = estado
+                });
             }
 
             List<UsuarioAdminViewModel> todosLosUsuarios =
@@ -87,6 +88,7 @@ namespace FrontendAdministrativo.Controllers
 
             var modelo = new UsuariosIndexViewModel
             {
+                ApiDisponible = true,
                 Usuarios = usuariosFiltrados,
 
                 Buscar = buscar,
@@ -123,7 +125,10 @@ namespace FrontendAdministrativo.Controllers
 
             if (usuarioApi is null)
             {
-                return NotFound();
+                TempData["MensajeError"] =
+                    "No fue posible consultar el usuario en la API.";
+
+                return RedirectToAction(nameof(Index));
             }
 
             UsuarioAdminViewModel usuario =
@@ -182,7 +187,11 @@ namespace FrontendAdministrativo.Controllers
 
             if (usuarioActual is null)
             {
-                return NotFound();
+                ModelState.AddModelError(
+                    string.Empty,
+                    "No fue posible consultar el usuario en la API.");
+
+                return View(modelo);
             }
 
             int nuevoRolId =
@@ -244,7 +253,11 @@ namespace FrontendAdministrativo.Controllers
 
             if (usuarioApi is null)
             {
-                return NotFound();
+                TempData["MensajeError"] =
+                    "No fue posible consultar el usuario en la API. " +
+                    "No se realizó ningún cambio.";
+
+                return RedirectToAction(nameof(Index));
             }
 
             bool nuevoEstado =

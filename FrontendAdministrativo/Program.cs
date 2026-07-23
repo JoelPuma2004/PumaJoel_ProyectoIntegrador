@@ -35,11 +35,6 @@ namespace FrontendAdministrativo
 
                     client.Timeout =
                         TimeSpan.FromSeconds(15);
-
-                    client.DefaultRequestHeaders
-                        .TryAddWithoutValidation(
-                            "ngrok-skip-browser-warning",
-                            "true");
                 });
 
             // ==========================================

@@ -114,27 +114,34 @@
         </button>
     </div>
 }
+@if (!Model.ApiDisponible)
+{
+    <div class="alert alert-danger">
+        La API de Estadísticas no está disponible. No se muestran usuarios
+        ni se habilitan acciones administrativas.
+    </div>
+}
 
 <div class="row g-3 mb-4">
 
     <div class="col-lg-4 col-md-6">
         <div class="summary-card">
             <span>Total de usuarios</span>
-            <strong>@Model.TotalUsuarios</strong>
+            <strong>@(Model.ApiDisponible ? Model.TotalUsuarios.ToString() : "N/D")</strong>
         </div>
     </div>
 
     <div class="col-lg-4 col-md-6">
         <div class="summary-card finished">
             <span>Usuarios activos</span>
-            <strong>@Model.UsuariosActivos</strong>
+            <strong>@(Model.ApiDisponible ? Model.UsuariosActivos.ToString() : "N/D")</strong>
         </div>
     </div>
 
     <div class="col-lg-4 col-md-6">
         <div class="summary-card live">
             <span>Administradores</span>
-            <strong>@Model.Administradores</strong>
+            <strong>@(Model.ApiDisponible ? Model.Administradores.ToString() : "N/D")</strong>
         </div>
     </div>
 
@@ -272,7 +279,14 @@
         </div>
     </div>
 
-    @if (Model.Usuarios.Count == 0)
+    @if (!Model.ApiDisponible)
+    {
+        <div class="empty-state">
+            <h4>Usuarios no disponibles</h4>
+            <p>Inicie la API local y vuelva a intentar.</p>
+        </div>
+    }
+    else if (Model.Usuarios.Count == 0)
     {
         <div class="empty-state">
             <h4>No se encontraron usuarios</h4>

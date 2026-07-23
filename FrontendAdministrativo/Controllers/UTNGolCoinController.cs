@@ -34,6 +34,23 @@ namespace FrontendAdministrativo.Controllers
         public async Task<IActionResult> Guardar(
             UTNGolCoinViewModel modelo)
         {
+            ConfiguracionUTNGolCoinApiDto? configuracionActual =
+                await _utnGolCoinApiService
+                    .ObtenerConfiguracionAsync();
+
+            if (configuracionActual is null)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "La configuración no está disponible. " +
+                    "No se realizó ningún cambio.");
+
+                await CargarRankingAsync(modelo);
+                modelo.ConfiguracionDisponible = false;
+
+                return View("Index", modelo);
+            }
+
             if (!ModelState.IsValid)
             {
                 await CargarRankingAsync(modelo);
@@ -69,7 +86,7 @@ namespace FrontendAdministrativo.Controllers
                 ModelState.AddModelError(
                     string.Empty,
                     "No fue posible actualizar la configuración " +
-                    "en la API de Mayra.");
+                    "en la API UTNGolCoin.");
 
                 await CargarRankingAsync(modelo);
 

@@ -9,14 +9,14 @@ namespace FrontendAdministrativo.Models.ViewModels
 
         [Required(ErrorMessage = "Ingrese el número del partido.")]
         [Range(
-            1,
-            104,
-            ErrorMessage = "El número debe estar entre 1 y 104.")]
+            89,
+            96,
+            ErrorMessage = "Para esta entrega solo se permiten partidos de octavos (89 a 96).")]
         [Display(Name = "Número del partido")]
         public int NumeroPartidoFifa { get; set; }
 
         [Required]
-        public string Fase { get; set; } = "GRUPOS";
+        public string Fase { get; set; } = "OCTAVOS";
 
         // Propiedades antiguas conservadas para no afectar Editar.
         public string? Grupo { get; set; }
@@ -84,6 +84,8 @@ namespace FrontendAdministrativo.Models.ViewModels
         public bool EquiposAsignadosAutomaticamente { get; set; }
 
         public bool PuedeCrearPartido { get; set; } = true;
+
+        public bool CatalogosDisponibles { get; set; }
 
         public string? MensajeClasificacion { get; set; }
 
