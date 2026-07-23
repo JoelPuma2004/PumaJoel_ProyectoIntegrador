@@ -28,6 +28,6 @@ El panel queda accesible como `http://IP_DE_JOEL:5203`.
 Las credenciales locales de demostración son
 `admin@utn.edu.ec` / `Admin123!`.
 
-La carga manual de partidos está limitada a los octavos de final
-(números FIFA 89 a 96). Los listados y cambios dependen siempre de las APIs
+La carga manual permite todos los partidos desde octavos hasta la final
+(números FIFA 89 a 104). Los listados y cambios dependen siempre de las APIs
 reales; si una no responde, el panel muestra el estado no disponible.

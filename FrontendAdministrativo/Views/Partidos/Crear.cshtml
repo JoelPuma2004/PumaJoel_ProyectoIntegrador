@@ -63,11 +63,11 @@
                        class="form-control"
                        type="number"
                        min="89"
-                       max="96"
+                       max="104"
                        readonly />
 
                 <small class="text-muted">
-                    Se asigna el siguiente número libre de octavos (89 a 96).
+                    Se asigna el siguiente número libre desde octavos hasta la final (89 a 104).
                 </small>
 
                 <span asp-validation-for="NumeroPartidoFifa"
@@ -91,7 +91,7 @@
                        readonly />
 
                 <small class="text-muted">
-                    Para este alcance, la carga manual se limita a octavos.
+                    La fase se calcula automáticamente según el número FIFA.
                 </small>
 
                 <span asp-validation-for="Fase"
@@ -132,130 +132,63 @@
 
             </div>
 
-            @if (Model.NumeroPartidoFifa >= 97)
-            {
-                @if (!string.IsNullOrWhiteSpace(
-                        Model.MensajeClasificacion))
-                {
-                    <div class="col-12">
+            <div class="col-md-6">
 
-                        <div class="alert @(Model.PuedeCrearPartido
-                                                        ? "alert-success"
-                                                        : "alert-warning")">
+                <label asp-for="SeleccionLocalId"
+                       class="form-label">
+                </label>
 
-                            @Model.MensajeClasificacion
+                <select asp-for="SeleccionLocalId"
+                        class="form-select">
 
-                        </div>
+                    <option value="">
+                        Seleccione el Equipo 1
+                    </option>
 
-                    </div>
-                }
-
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Equipo 1 clasificado
-                    </label>
-
-                    <input asp-for="SeleccionLocalId"
-                           type="hidden" />
-
-                    <input type="text"
-                           class="form-control"
-                           value="@(string.IsNullOrWhiteSpace(
-                                                    Model.SeleccionLocal)
-                                                    ? "Pendiente de clasificar"
-                                                    : Model.SeleccionLocal)"
-                           readonly />
-
-                    <span asp-validation-for="SeleccionLocalId"
-                          class="text-danger">
-                    </span>
-
-                </div>
-
-                <div class="col-md-6">
-
-                    <label class="form-label">
-                        Equipo 2 clasificado
-                    </label>
-
-                    <input asp-for="SeleccionVisitanteId"
-                           type="hidden" />
-
-                    <input type="text"
-                           class="form-control"
-                           value="@(string.IsNullOrWhiteSpace(
-                                                    Model.SeleccionVisitante)
-                                                    ? "Pendiente de clasificar"
-                                                    : Model.SeleccionVisitante)"
-                           readonly />
-
-                    <span asp-validation-for="SeleccionVisitanteId"
-                          class="text-danger">
-                    </span>
-
-                </div>
-            }
-            else
-            {
-                <div class="col-md-6">
-
-                    <label asp-for="SeleccionLocalId"
-                           class="form-label">
-                    </label>
-
-                    <select asp-for="SeleccionLocalId"
-                            class="form-select">
-
-                        <option value="">
-                            Seleccione el Equipo 1
+                    @foreach (var seleccion in Model.Selecciones)
+                    {
+                        <option value="@seleccion.Id">
+                            @seleccion.Nombre
+                            (@seleccion.Grupo)
                         </option>
+                    }
 
-                        @foreach (var seleccion in Model.Selecciones)
-                        {
-                            <option value="@seleccion.Id">
-                                @seleccion.Nombre
-                                (@seleccion.Grupo)
-                            </option>
-                        }
+                </select>
 
-                    </select>
+                <span asp-validation-for="SeleccionLocalId"
+                      class="text-danger">
+                </span>
 
-                    <span asp-validation-for="SeleccionLocalId"
-                          class="text-danger">
-                    </span>
+            </div>
 
-                </div>
+            <div class="col-md-6">
 
-                <div class="col-md-6">
+                <label asp-for="SeleccionVisitanteId"
+                       class="form-label">
+                </label>
 
-                    <label asp-for="SeleccionVisitanteId"
-                           class="form-label">
-                    </label>
+                <select asp-for="SeleccionVisitanteId"
+                        class="form-select">
 
-                    <select asp-for="SeleccionVisitanteId"
-                            class="form-select">
+                    <option value="">
+                        Seleccione el Equipo 2
+                    </option>
 
-                        <option value="">
-                            Seleccione el Equipo 2
+                    @foreach (var seleccion in Model.Selecciones)
+                    {
+                        <option value="@seleccion.Id">
+                            @seleccion.Nombre
+                            (@seleccion.Grupo)
                         </option>
+                    }
 
-                        @foreach (var seleccion in Model.Selecciones)
-                        {
-                            <option value="@seleccion.Id">
-                                @seleccion.Nombre
-                                (@seleccion.Grupo)
-                            </option>
-                        }
+                </select>
 
-                    </select>
+                <span asp-validation-for="SeleccionVisitanteId"
+                      class="text-danger">
+                </span>
 
-                    <span asp-validation-for="SeleccionVisitanteId"
-                          class="text-danger">
-                    </span>
-
-                </div>
-            }
+            </div>
 
             <div class="col-md-6">
 
@@ -419,6 +352,34 @@
                     };
                 }
 
+                if (numero >= 97 && numero <= 100) {
+                    return {
+                        codigo: "CUARTOS",
+                        texto: "Cuartos de final"
+                    };
+                }
+
+                if (numero >= 101 && numero <= 102) {
+                    return {
+                        codigo: "SEMIFINAL",
+                        texto: "Semifinal"
+                    };
+                }
+
+                if (numero === 103) {
+                    return {
+                        codigo: "TERCER_PUESTO",
+                        texto: "Tercer puesto"
+                    };
+                }
+
+                if (numero === 104) {
+                    return {
+                        codigo: "FINAL",
+                        texto: "Final"
+                    };
+                }
+
                 return {
                     codigo: "",
                     texto: "Número no válido"
@@ -442,7 +403,7 @@
                 grupoSelect.value = "";
                 grupoSelect.disabled = true;
                 grupoAyuda.textContent =
-                    "No aplica en octavos de final.";
+                    "No aplica en fases eliminatorias.";
             }
 
             numeroInput.addEventListener(

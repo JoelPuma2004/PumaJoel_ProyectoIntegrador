@@ -10,8 +10,8 @@ namespace FrontendAdministrativo.Models.ViewModels
         [Required(ErrorMessage = "Ingrese el número del partido.")]
         [Range(
             89,
-            96,
-            ErrorMessage = "Para esta entrega solo se permiten partidos de octavos (89 a 96).")]
+            104,
+            ErrorMessage = "Solo se permiten partidos desde octavos hasta la final (89 a 104).")]
         [Display(Name = "Número del partido")]
         public int NumeroPartidoFifa { get; set; }
 

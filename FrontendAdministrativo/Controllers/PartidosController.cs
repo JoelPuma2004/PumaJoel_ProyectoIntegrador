@@ -132,14 +132,14 @@ namespace FrontendAdministrativo.Controllers
                     .ToHashSet();
 
             int siguienteNumero =
-                Enumerable.Range(89, 8)
+                Enumerable.Range(89, 16)
                     .FirstOrDefault(numero =>
                         !numerosUtilizados.Contains(numero));
 
             if (siguienteNumero == 0)
             {
                 TempData["MensajeError"] =
-                    "Los partidos de octavos (89 a 96) ya están registrados.";
+                    "Los partidos desde octavos hasta la final (89 a 104) ya están registrados.";
 
                 return RedirectToAction(nameof(Index));
             }
@@ -546,6 +546,18 @@ namespace FrontendAdministrativo.Controllers
             {
                 >= 89 and <= 96 =>
                     "OCTAVOS",
+
+                >= 97 and <= 100 =>
+                    "CUARTOS",
+
+                >= 101 and <= 102 =>
+                    "SEMIFINAL",
+
+                103 =>
+                    "TERCER_PUESTO",
+
+                104 =>
+                    "FINAL",
 
                 _ =>
                     string.Empty
