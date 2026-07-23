@@ -92,6 +92,12 @@ namespace FrontendAdministrativo.Models.ViewModels
         public List<SeleccionApiDto> Selecciones { get; set; }
             = new();
 
+        public List<SeleccionApiDto> SeleccionesLocalDisponibles { get; set; }
+            = new();
+
+        public List<SeleccionApiDto> SeleccionesVisitanteDisponibles { get; set; }
+            = new();
+
         public List<SedeApiDto> Sedes { get; set; }
             = new();
 

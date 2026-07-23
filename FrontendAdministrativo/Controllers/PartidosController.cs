@@ -148,7 +148,7 @@ namespace FrontendAdministrativo.Controllers
             {
                 NumeroPartidoFifa = siguienteNumero,
 
-                Fase = "OCTAVOS",
+                Fase = ObtenerFasePorNumero(siguienteNumero),
 
                 FechaHora = DateTime.Now.AddDays(1),
                 Estado = "PROGRAMADO",
@@ -159,6 +159,9 @@ namespace FrontendAdministrativo.Controllers
             };
 
             await CargarCatalogosAsync(modelo);
+            PrepararEquiposClasificados(
+                modelo,
+                partidosExistentes);
 
             return View(modelo);
         }
@@ -179,6 +182,18 @@ namespace FrontendAdministrativo.Controllers
                 ModelState.AddModelError(
                     string.Empty,
                     "La API no está disponible. No se guardó ningún partido.");
+
+                return View(modelo);
+            }
+
+            if (!PrepararEquiposClasificados(
+                    modelo,
+                    partidosExistentes))
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    modelo.MensajeClasificacion
+                    ?? "No fue posible determinar los equipos clasificados.");
 
                 return View(modelo);
             }
@@ -208,13 +223,13 @@ namespace FrontendAdministrativo.Controllers
             }
             // Verifica que los equipos existan.
             SeleccionApiDto? equipo1 =
-                modelo.Selecciones.FirstOrDefault(
+                modelo.SeleccionesLocalDisponibles.FirstOrDefault(
                     seleccion =>
                         seleccion.Id ==
                         modelo.SeleccionLocalId);
 
             SeleccionApiDto? equipo2 =
-                modelo.Selecciones.FirstOrDefault(
+                modelo.SeleccionesVisitanteDisponibles.FirstOrDefault(
                     seleccion =>
                         seleccion.Id ==
                         modelo.SeleccionVisitanteId);
@@ -224,7 +239,7 @@ namespace FrontendAdministrativo.Controllers
             {
                 ModelState.AddModelError(
                     nameof(modelo.SeleccionLocalId),
-                    "El Equipo 1 seleccionado no existe.");
+                    "El Equipo 1 no clasificó para este partido.");
             }
 
             if (modelo.SeleccionVisitanteId.HasValue &&
@@ -232,7 +247,7 @@ namespace FrontendAdministrativo.Controllers
             {
                 ModelState.AddModelError(
                     nameof(modelo.SeleccionVisitanteId),
-                    "El Equipo 2 seleccionado no existe.");
+                    "El Equipo 2 no clasificó para este partido.");
             }
 
             // Los dos equipos deben ser diferentes.
@@ -890,9 +905,9 @@ namespace FrontendAdministrativo.Controllers
 
             return RedirectToAction(nameof(Index));
         }
-        private static bool AsignarEquiposClasificados(
-    PartidoFormViewModel modelo,
-    List<PartidoApiDto> partidos)
+        private static bool PrepararEquiposClasificados(
+            PartidoFormViewModel modelo,
+            List<PartidoApiDto> partidos)
         {
             var origenes =
                 ObtenerPartidosDeOrigen(
@@ -900,8 +915,10 @@ namespace FrontendAdministrativo.Controllers
 
             if (origenes is null)
             {
-                modelo.PuedeCrearPartido = true;
-                return true;
+                modelo.PuedeCrearPartido = false;
+                modelo.MensajeClasificacion =
+                    "No existe una llave de clasificación para este partido.";
+                return false;
             }
 
             PartidoApiDto? partidoOrigen1 =
@@ -940,42 +957,61 @@ namespace FrontendAdministrativo.Controllers
                 return false;
             }
 
-            SeleccionApiDto? equipo1 =
-                ObtenerSeleccionPorResultado(
+            List<SeleccionApiDto> equipos1 =
+                ObtenerSeleccionesPorResultado(
                     partidoOrigen1,
                     origenes.Value.UsarGanador1);
 
-            SeleccionApiDto? equipo2 =
-                ObtenerSeleccionPorResultado(
+            List<SeleccionApiDto> equipos2 =
+                ObtenerSeleccionesPorResultado(
                     partidoOrigen2,
                     origenes.Value.UsarGanador2);
 
-            if (equipo1 is null || equipo2 is null)
+            if (equipos1.Count == 0 || equipos2.Count == 0)
             {
                 modelo.PuedeCrearPartido = false;
 
                 modelo.MensajeClasificacion =
-                    "No se puede determinar el clasificado porque " +
-                    "uno de los partidos terminó empatado y la API " +
-                    "no indica el ganador por penales.";
+                    "No se pudieron obtener los equipos de los partidos anteriores.";
 
                 return false;
             }
 
-            modelo.SeleccionLocalId = equipo1.Id;
-            modelo.SeleccionVisitanteId = equipo2.Id;
+            modelo.SeleccionesLocalDisponibles =
+                equipos1.OrderBy(equipo => equipo.Nombre).ToList();
 
-            modelo.SeleccionLocal = equipo1.Nombre;
-            modelo.SeleccionVisitante = equipo2.Nombre;
+            modelo.SeleccionesVisitanteDisponibles =
+                equipos2.OrderBy(equipo => equipo.Nombre).ToList();
 
-            modelo.EquiposAsignadosAutomaticamente = true;
+            if (equipos1.Count == 1)
+            {
+                modelo.SeleccionLocalId = equipos1[0].Id;
+                modelo.SeleccionLocal = equipos1[0].Nombre;
+            }
+
+            if (equipos2.Count == 1)
+            {
+                modelo.SeleccionVisitanteId = equipos2[0].Id;
+                modelo.SeleccionVisitante = equipos2[0].Nombre;
+            }
+
+            bool requiereSeleccionPorPenales =
+                equipos1.Count > 1 ||
+                equipos2.Count > 1;
+
+            modelo.EquiposAsignadosAutomaticamente =
+                !requiereSeleccionPorPenales;
             modelo.PuedeCrearPartido = true;
 
-            modelo.MensajeClasificacion =
-                $"Equipos asignados automáticamente según los " +
-                $"resultados de los partidos FIFA " +
-                $"#{origenes.Value.Partido1} y " +
-                $"#{origenes.Value.Partido2}.";
+            modelo.MensajeClasificacion = requiereSeleccionPorPenales
+                ? $"Solo se muestran equipos de los partidos FIFA " +
+                  $"#{origenes.Value.Partido1} y " +
+                  $"#{origenes.Value.Partido2}. Seleccione manualmente " +
+                  "el clasificado del partido empatado, porque la API " +
+                  "no registra el resultado por penales."
+                : $"Equipos clasificados automáticamente desde los " +
+                  $"partidos FIFA #{origenes.Value.Partido1} y " +
+                  $"#{origenes.Value.Partido2}.";
 
             return true;
         }
@@ -991,20 +1027,27 @@ namespace FrontendAdministrativo.Controllers
                    partido.GolesVisitante.HasValue;
         }
 
-        private static SeleccionApiDto? ObtenerSeleccionPorResultado(
+        private static List<SeleccionApiDto> ObtenerSeleccionesPorResultado(
             PartidoApiDto partido,
             bool usarGanador)
         {
             if (!partido.GolesLocal.HasValue ||
                 !partido.GolesVisitante.HasValue)
             {
-                return null;
+                return new();
             }
 
             if (partido.GolesLocal.Value ==
                 partido.GolesVisitante.Value)
             {
-                return null;
+                return new[]
+                    {
+                        partido.SeleccionLocal,
+                        partido.SeleccionVisitante
+                    }
+                    .OfType<SeleccionApiDto>()
+                    .DistinctBy(seleccion => seleccion.Id)
+                    .ToList();
             }
 
             bool ganoLocal =
@@ -1016,9 +1059,13 @@ namespace FrontendAdministrativo.Controllers
                 ganoLocal = !ganoLocal;
             }
 
-            return ganoLocal
+            SeleccionApiDto? seleccion = ganoLocal
                 ? partido.SeleccionLocal
                 : partido.SeleccionVisitante;
+
+            return seleccion is null
+                ? new()
+                : new() { seleccion };
         }
 
         private static (
@@ -1031,6 +1078,15 @@ namespace FrontendAdministrativo.Controllers
         {
             return numeroPartidoFifa switch
             {
+                89 => (74, true, 77, true),
+                90 => (73, true, 75, true),
+                91 => (76, true, 78, true),
+                92 => (79, true, 80, true),
+                93 => (83, true, 84, true),
+                94 => (81, true, 82, true),
+                95 => (86, true, 88, true),
+                96 => (85, true, 87, true),
+
                 97 => (89, true, 90, true),
                 98 => (93, true, 94, true),
                 99 => (91, true, 92, true),

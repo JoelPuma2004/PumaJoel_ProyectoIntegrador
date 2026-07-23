@@ -39,6 +39,13 @@
     como local o visitante.
 </div>
 
+@if (!string.IsNullOrWhiteSpace(Model.MensajeClasificacion))
+{
+    <div class="alert @(Model.PuedeCrearPartido ? "alert-success" : "alert-warning")">
+        @Model.MensajeClasificacion
+    </div>
+}
+
 <div class="panel-card">
 
     <form asp-controller="Partidos"
@@ -145,7 +152,7 @@
                         Seleccione el Equipo 1
                     </option>
 
-                    @foreach (var seleccion in Model.Selecciones)
+                    @foreach (var seleccion in Model.SeleccionesLocalDisponibles)
                     {
                         <option value="@seleccion.Id">
                             @seleccion.Nombre
@@ -174,7 +181,7 @@
                         Seleccione el Equipo 2
                     </option>
 
-                    @foreach (var seleccion in Model.Selecciones)
+                    @foreach (var seleccion in Model.SeleccionesVisitanteDisponibles)
                     {
                         <option value="@seleccion.Id">
                             @seleccion.Nombre
