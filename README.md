@@ -40,6 +40,20 @@ make run
 El panel escucha en `0.0.0.0:5203`, accesible como
 `http://IP_DE_JOEL:5203`.
 
+## Windows con Visual Studio 2022
+
+1. Abre `PumaJoel_ProyectoIntegrador.slnx` y selecciona como proyecto de inicio
+   `FrontendAdministrativo`.
+2. Selecciona el perfil **http** (`0.0.0.0:5203`).
+3. En **Propiedades → Depurar → Abrir perfiles de inicio**, agrega:
+
+```text
+ApiEstadisticas__BaseUrl=http://IP_DE_ANDREA:18080/demo/api/v1/
+ApiUTNGolCoin__BaseUrl=http://IP_DE_MAYRA:5001/api/
+```
+
+4. Ejecuta con **F5** y permite el puerto `5203` en redes privadas.
+
 Las credenciales locales de demostración son
 `admin@utn.edu.ec` / `Admin123!`. También admiten variables de entorno:
 
